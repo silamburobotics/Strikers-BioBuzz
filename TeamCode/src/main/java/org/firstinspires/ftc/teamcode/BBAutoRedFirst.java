@@ -17,7 +17,7 @@ import com.qualcomm.robotcore.util.Range;
 
 /**
  * RED alliance first autonomous.
- * Uses the same intake power and gate positions as BioBuzzRoboCentricRed.
+ * Uses the same intake power and gate positions as StrikersConfig.
  *
  * Sequence: gate closed -> intake on -> flywheel on -> wait -> gate open -> wait -> gate closed
  *           -> drive forward -> wait -> drive back -> gate open -> wait -> strafe right -> turn
@@ -50,24 +50,24 @@ public class BBAutoRedFirst extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
         // Intake
-        DcMotorEx intake = hardwareMap.get(DcMotorEx.class, BioBuzzRoboCentricRed.INTAKE_NAME);
+        DcMotorEx intake = hardwareMap.get(DcMotorEx.class, StrikersConfig.INTAKE_NAME);
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Gate and shifter, same defaults as teleop (both closed)
-        Servo gate = hardwareMap.get(Servo.class, BioBuzzRoboCentricRed.GATE_SERVO);
-        Servo shifter = hardwareMap.get(Servo.class, BioBuzzRoboCentricRed.SHIFTER_SERVO);
-        gate.setPosition(BioBuzzRoboCentricRed.CLOSED_POSITION);
-        shifter.setPosition(BioBuzzRoboCentricRed.SHIFTER_CLOSED_POSITION);
+        Servo gate = hardwareMap.get(Servo.class, StrikersConfig.GATE_SERVO);
+        Servo shifter = hardwareMap.get(Servo.class, StrikersConfig.SHIFTER_SERVO);
+        gate.setPosition(StrikersConfig.CLOSED_POSITION);
+        shifter.setPosition(StrikersConfig.SHIFTER_CLOSED_POSITION);
 
         // Flywheels
-        shooter1 = hardwareMap.get(DcMotorEx.class, BioBuzzRoboCentricRed.MOTOR_1_NAME);
-        shooter2 = hardwareMap.get(DcMotorEx.class, BioBuzzRoboCentricRed.MOTOR_2_NAME);
+        shooter1 = hardwareMap.get(DcMotorEx.class, StrikersConfig.MOTOR_1_NAME);
+        shooter2 = hardwareMap.get(DcMotorEx.class, StrikersConfig.MOTOR_2_NAME);
         shooter1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         shooter1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         shooter2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         shooter1.setDirection(DcMotorSimple.Direction.FORWARD);
-        shooter2.setDirection(BioBuzzRoboCentricRed.MOTOR_2_REVERSED
+        shooter2.setDirection(StrikersConfig.MOTOR_2_REVERSED
                 ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
 
         telemetry.addData("Status", "Ready - RED first auto");
@@ -79,15 +79,15 @@ public class BBAutoRedFirst extends LinearOpMode {
         double flywheelRPM = FLYWHEEL_RPM;
 
         // Gate is closed. Start intake and flywheel, wait.
-        intake.setPower(BioBuzzRoboCentricRed.INTAKE_POWER);
+        intake.setPower(StrikersConfig.INTAKE_POWER);
         holdFlywheel(flywheelRPM, SPINUP_WAIT_SEC, "Spinning up");
 
         // Open gate, wait.
-        gate.setPosition(BioBuzzRoboCentricRed.OPEN_POSITION);
+        gate.setPosition(StrikersConfig.OPEN_POSITION);
         holdFlywheel(flywheelRPM, GATE_OPEN_SEC, "Gate open");
 
         // Close gate. The flywheel keeps running to the end of the sequence.
-        gate.setPosition(BioBuzzRoboCentricRed.CLOSED_POSITION);
+        gate.setPosition(StrikersConfig.CLOSED_POSITION);
 
         // Move forward.
         if (opModeIsActive()) {
@@ -109,7 +109,7 @@ public class BBAutoRedFirst extends LinearOpMode {
 
         // Back at the start line: open the gate, wait.
         if (opModeIsActive()) {
-            gate.setPosition(BioBuzzRoboCentricRed.OPEN_POSITION);
+            gate.setPosition(StrikersConfig.OPEN_POSITION);
         }
         holdFlywheel(flywheelRPM, WAIT_AFTER_GATE_OPEN_SEC, "Gate open at start line");
 
@@ -205,13 +205,13 @@ public class BBAutoRedFirst extends LinearOpMode {
         }
     }
 
-    /** One control step, same slew limit and proportional correction as BioBuzzRoboCentricRed. */
+    /** One control step, same slew limit and proportional correction as StrikersConfig. */
     private double updateFlywheel(double targetRPM) {
         double maxRPMChangePerLoop = 60.0;
         smoothedTargetRPM += Range.clip(targetRPM - smoothedTargetRPM,
                 -maxRPMChangePerLoop, maxRPMChangePerLoop);
 
-        double actualRPM1 = (shooter1.getVelocity() * 60.0) / BioBuzzRoboCentricRed.TICKS_PER_REV;
+        double actualRPM1 = (shooter1.getVelocity() * 60.0) / StrikersConfig.TICKS_PER_REV;
 
         double power = 0.0;
         if (smoothedTargetRPM > 50.0) {
