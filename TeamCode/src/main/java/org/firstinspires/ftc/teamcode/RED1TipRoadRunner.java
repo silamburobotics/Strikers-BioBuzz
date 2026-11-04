@@ -159,7 +159,7 @@ public class RED1TipRoadRunner extends LinearOpMode {
         // --- STEP 4: Drive RIGHT 5 feet (60 inches) & TURN to face hive ---
         Pose2d poseAfterBack = drive.localizer.getPose();
         Action driveRightToOtherSide = drive.actionBuilder(poseAfterBack)
-                .lineToY(poseAfterBack.position.y + 60.0) // Strafe right 5 feet (60 inches)
+                .strafeTo(new Vector2d(poseAfterBack.position.x, poseAfterBack.position.y + 60.0)) // Strafe right 5 feet (60 inches); facing 180 deg, robot's right is field +Y
                 .strafeToLinearHeading(otherSidePose.position, otherSidePose.heading) // Turn to face hive
                 .build();
         runAction(driveRightToOtherSide);
