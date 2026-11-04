@@ -19,7 +19,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 /**
  * RED 1 TIP Autonomous converted to RoadRunner 1.0.
  *
- * Hardware names, servo positions, and shooter control match BioBuzzRoboCentricRed.
+ * Hardware names, servo positions, and shooter control match StrikersConfig.
  * Uses Pinpoint odometry through MecanumDrive.
  */
 @Config
@@ -27,26 +27,26 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class RED1TipRoadRunner extends LinearOpMode {
 
     // ---------- Hardware names (same as TeleOp) ----------
-    public static String INTAKE_NAME = BioBuzzRoboCentricRed.INTAKE_NAME;
-    public static String GATE_NAME = BioBuzzRoboCentricRed.GATE_SERVO;
-    public static String SHIFTER_NAME = BioBuzzRoboCentricRed.SHIFTER_SERVO;
-    public static String SHOOTER_1_NAME = BioBuzzRoboCentricRed.MOTOR_1_NAME;
-    public static String SHOOTER_2_NAME = BioBuzzRoboCentricRed.MOTOR_2_NAME;
-    public static String TURRET_NAME = BioBuzzRoboCentricRed.TURRET_NAME;
+    public static String INTAKE_NAME = StrikersConfig.INTAKE_NAME;
+    public static String GATE_NAME = StrikersConfig.GATE_SERVO;
+    public static String SHIFTER_NAME = StrikersConfig.SHIFTER_SERVO;
+    public static String SHOOTER_1_NAME = StrikersConfig.MOTOR_1_NAME;
+    public static String SHOOTER_2_NAME = StrikersConfig.MOTOR_2_NAME;
+    public static String TURRET_NAME = StrikersConfig.TURRET_NAME;
 
     // ---------- Servo / Intake positions (same as TeleOp) ----------
-    public static double GATE_OPEN = BioBuzzRoboCentricRed.OPEN_POSITION;            // 0.4
-    public static double GATE_CLOSED = BioBuzzRoboCentricRed.CLOSED_POSITION;        // 0.7
-    public static double SHIFTER_OPEN = BioBuzzRoboCentricRed.SHIFTER_OPEN_POSITION;  // 0.25
-    public static double SHIFTER_CLOSED = BioBuzzRoboCentricRed.SHIFTER_CLOSED_POSITION; // 0.95
-    public static double INTAKE_POWER = BioBuzzRoboCentricRed.INTAKE_POWER;           // 1.0
+    public static double GATE_OPEN = StrikersConfig.OPEN_POSITION;            // 0.4
+    public static double GATE_CLOSED = StrikersConfig.CLOSED_POSITION;        // 0.7
+    public static double SHIFTER_OPEN = StrikersConfig.SHIFTER_OPEN_POSITION;  // 0.25
+    public static double SHIFTER_CLOSED = StrikersConfig.SHIFTER_CLOSED_POSITION; // 0.95
+    public static double INTAKE_POWER = StrikersConfig.INTAKE_POWER;           // 1.0
 
     // ---------- Shooter (feedforward + PID control) ----------
-    public static double FLYWHEEL_OPEN_RPM = BioBuzzRoboCentricRed.FLYWHEEL_OPEN_RPM;     // 2450.0
-    public static double FLYWHEEL_CLOSED_RPM = BioBuzzRoboCentricRed.FLYWHEEL_CLOSED_RPM; // 2450.0
+    public static double FLYWHEEL_OPEN_RPM = StrikersConfig.FLYWHEEL_OPEN_RPM;     // 2450.0
+    public static double FLYWHEEL_CLOSED_RPM = StrikersConfig.FLYWHEEL_CLOSED_RPM; // 2450.0
     public static boolean AUTO_SHIFTER_OPEN = false;
-    public static double TICKS_PER_REV = BioBuzzRoboCentricRed.TICKS_PER_REV;
-    public static boolean MOTOR_2_REVERSED = BioBuzzRoboCentricRed.MOTOR_2_REVERSED;
+    public static double TICKS_PER_REV = StrikersConfig.TICKS_PER_REV;
+    public static boolean MOTOR_2_REVERSED = StrikersConfig.MOTOR_2_REVERSED;
     public static double SHOOTER_kF = 0.00036;
     public static double SHOOTER_kP = 0.0005;
     public static double SHOOTER_kI = 0.0002;
@@ -64,11 +64,11 @@ public class RED1TipRoadRunner extends LinearOpMode {
     public static double COLLECT_DWELL_SEC = 1.0;
 
     // ---------- Turret Configuration ----------
-    public static double TURRET_TICKS_PER_REV = BioBuzzRoboCentricRed.TURRET_TICKS_PER_REV;
-    public static double TURRET_GEAR_RATIO = BioBuzzRoboCentricRed.TURRET_GEAR_RATIO; // 2.2727
-    public static double TURRET_MAX_POWER = BioBuzzRoboCentricRed.TURRET_MAX_POWER;
-    public static double TURRET_MAX_ANGLE_DEG = BioBuzzRoboCentricRed.TURRET_MAX_ANGLE_DEG;
-    public static boolean TURRET_REVERSED = BioBuzzRoboCentricRed.TURRET_REVERSED;
+    public static double TURRET_TICKS_PER_REV = StrikersConfig.TURRET_TICKS_PER_REV;
+    public static double TURRET_GEAR_RATIO = StrikersConfig.TURRET_GEAR_RATIO; // 2.2727
+    public static double TURRET_MAX_POWER = StrikersConfig.TURRET_MAX_POWER;
+    public static double TURRET_MAX_ANGLE_DEG = StrikersConfig.TURRET_MAX_ANGLE_DEG;
+    public static boolean TURRET_REVERSED = StrikersConfig.TURRET_REVERSED;
     public static double AUTO_TURRET_ANGLE_DEG = 0.0;
 
     // ---------- Hardware Declarations ----------
@@ -203,10 +203,10 @@ public class RED1TipRoadRunner extends LinearOpMode {
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         try {
-            Servo intakeLiftLeft = hardwareMap.get(Servo.class, BioBuzzRoboCentricRed.INTAKE_LIFT_LEFT_NAME);
-            Servo intakeLiftRight = hardwareMap.get(Servo.class, BioBuzzRoboCentricRed.INTAKE_LIFT_RIGHT_NAME);
-            double initLeftPos = BioBuzzRoboCentricRed.INTAKE_LIFT_DOWN_POS;
-            double initRightPos = Math.max(0.0, Math.min(1.0, (1.0 - initLeftPos) + BioBuzzRoboCentricRed.RIGHT_SERVO_TRIM_OFFSET));
+            Servo intakeLiftLeft = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_LEFT_NAME);
+            Servo intakeLiftRight = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_RIGHT_NAME);
+            double initLeftPos = StrikersConfig.INTAKE_LIFT_DOWN_POS;
+            double initRightPos = Math.max(0.0, Math.min(1.0, (1.0 - initLeftPos) + StrikersConfig.RIGHT_SERVO_TRIM_OFFSET));
             intakeLiftLeft.setPosition(initLeftPos);
             intakeLiftRight.setPosition(initRightPos);
         } catch (Exception ignored) {}
