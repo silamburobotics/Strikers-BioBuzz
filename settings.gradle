@@ -1,0 +1,20 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+        maven {
+            url 'https://maven.brott.dev'
+            metadataSources {
+                mavenPom()
+                artifact()
+            }
+        }
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+rootProject.name = 'BioBuzz'
+
+include ':FtcRobotController'
+include ':TeamCode'
