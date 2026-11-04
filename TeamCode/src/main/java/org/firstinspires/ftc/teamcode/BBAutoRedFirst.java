@@ -30,15 +30,15 @@ public class BBAutoRedFirst extends LinearOpMode {
     public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 3.0;     // gate open, shooting
-    public static double DRIVE_DISTANCE_IN = 40.0; // forward move after shooting, then back the same distance
+    public static double DRIVE_DISTANCE_IN = 30.0; // forward move after shooting, then back the same distance
     public static double WAIT_AFTER_DRIVE_SEC = 3.0; // pause at the far point before driving back
     public static double WAIT_AFTER_GATE_OPEN_SEC = 3.0; // pause with the gate open back at the start line
-    public static double STRAFE_RIGHT_IN = 40.0;  // sideways move to the right at the end
-    public static double TURN_ANTICLOCKWISE_DEG = 90.0; // anticlockwise turn after the strafe
-    public static double MOVE_AFTER_TURN_IN = 40.0; // forward move (robot's front) after the turn
-    public static double SECOND_TURN_ANTICLOCKWISE_DEG = 90.0; // anticlockwise turn after that move
-    public static double THIRD_TURN_ANTICLOCKWISE_DEG = 90.0; // anticlockwise turn before the final move
-    public static double FINAL_MOVE_IN = 40.0;    // last forward move (robot's front)
+    public static double STRAFE_RIGHT_IN = 30.0;  // sideways move to the right at the end
+    public static double TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after the strafe
+    public static double MOVE_AFTER_TURN_IN = 30.0; // forward move (robot's front) after the turn
+    public static double SECOND_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after that move
+    public static double THIRD_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn before the final move
+    public static double FINAL_MOVE_IN = 30.0;    // last forward move (robot's front)
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
@@ -122,11 +122,11 @@ public class BBAutoRedFirst extends LinearOpMode {
                             .build());
         }
 
-        // Turn anticlockwise. In Road Runner counterclockwise is positive.
+        // Turn clockwise. In Road Runner counterclockwise is positive, so the angle is negated.
         if (opModeIsActive()) {
             runWithFlywheel(
                     drive.actionBuilder(drive.localizer.getPose())
-                            .turn(Math.toRadians(TURN_ANTICLOCKWISE_DEG))
+                            .turn(-Math.toRadians(TURN_CLOCKWISE_DEG))
                             .build());
         }
 
@@ -142,19 +142,19 @@ public class BBAutoRedFirst extends LinearOpMode {
                             .build());
         }
 
-        // Turn anticlockwise again.
+        // Turn clockwise again.
         if (opModeIsActive()) {
             runWithFlywheel(
                     drive.actionBuilder(drive.localizer.getPose())
-                            .turn(Math.toRadians(SECOND_TURN_ANTICLOCKWISE_DEG))
+                            .turn(-Math.toRadians(SECOND_TURN_CLOCKWISE_DEG))
                             .build());
         }
 
-        // Turn anticlockwise a third time.
+        // Turn clockwise a third time.
         if (opModeIsActive()) {
             runWithFlywheel(
                     drive.actionBuilder(drive.localizer.getPose())
-                            .turn(Math.toRadians(THIRD_TURN_ANTICLOCKWISE_DEG))
+                            .turn(-Math.toRadians(THIRD_TURN_CLOCKWISE_DEG))
                             .build());
         }
 
