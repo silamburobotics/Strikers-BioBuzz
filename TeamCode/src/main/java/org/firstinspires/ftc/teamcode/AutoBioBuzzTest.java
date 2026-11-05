@@ -30,11 +30,12 @@ public class AutoBioBuzzTest extends LinearOpMode {
     public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 2.0;     // gate open, shooting
+    public static double SECOND_SHOT_SEC = 3.0;   // gate open, second shot (after the turn)
     public static double DRIVE_DISTANCE_IN = 24.0; // forward move after shooting, then back the same distance
     public static double STRAFE_RIGHT_IN = 12.0;  // sideways move to the right at the end
     public static double TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after the strafe
     public static double MOVE_AFTER_TURN_IN = 50.0; // forward move (robot's front) after the turn
-    public static double SECOND_TURN_ANTICLOCKWISE_DEG = 90.0; // anticlockwise turn after that move
+    public static double SECOND_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after that move
     public static double FINAL_TURN_CLOCKWISE_DEG = 180.0; // clockwise turn before the final move
     public static double EXTRA_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after the 12 in move
     public static double EXTRA_MOVE_IN = 50.0;    // forward move after that turn
@@ -134,11 +135,11 @@ public class AutoBioBuzzTest extends LinearOpMode {
                             .build());
         }
 
-        // Turn anticlockwise (Road Runner counterclockwise is positive).
+        // Turn clockwise. In Road Runner counterclockwise is positive, so the angle is negated.
         if (opModeIsActive()) {
             runWithFlywheel(
                     drive.actionBuilder(drive.localizer.getPose())
-                            .turn(Math.toRadians(SECOND_TURN_ANTICLOCKWISE_DEG))
+                            .turn(-Math.toRadians(SECOND_TURN_CLOCKWISE_DEG))
                             .build());
         }
 
@@ -146,7 +147,7 @@ public class AutoBioBuzzTest extends LinearOpMode {
         if (opModeIsActive()) {
             gate.setPosition(StrikersConfig.OPEN_POSITION);
         }
-        holdFlywheel(flywheelRPM, GATE_OPEN_SEC, "Gate open (second shot)");
+        holdFlywheel(flywheelRPM, SECOND_SHOT_SEC, "Gate open (second shot)");
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
 
         // Turn clockwise 180. In Road Runner counterclockwise is positive, so the angle is negated.
