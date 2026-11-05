@@ -36,7 +36,6 @@ public class AutoBioBuzzTest extends LinearOpMode {
     public static double TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after the strafe
     public static double MOVE_AFTER_TURN_IN = 50.0; // forward move (robot's front) after the turn
     public static double SECOND_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after that move
-    public static double FINAL_TURN_CLOCKWISE_DEG = 180.0; // clockwise turn before the final move
     public static double EXTRA_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after the 12 in move
     public static double EXTRA_MOVE_IN = 50.0;    // forward move after that turn
     public static double FINAL_MOVE_IN = 12.0;    // last forward move (robot's front)
@@ -149,14 +148,6 @@ public class AutoBioBuzzTest extends LinearOpMode {
         }
         holdFlywheel(flywheelRPM, SECOND_SHOT_SEC, "Gate open (second shot)");
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
-
-        // Turn clockwise 180. In Road Runner counterclockwise is positive, so the angle is negated.
-        if (opModeIsActive()) {
-            runWithFlywheel(
-                    drive.actionBuilder(drive.localizer.getPose())
-                            .turn(-Math.toRadians(FINAL_TURN_CLOCKWISE_DEG))
-                            .build());
-        }
 
         // Move forward along the robot's current heading.
         if (opModeIsActive()) {
