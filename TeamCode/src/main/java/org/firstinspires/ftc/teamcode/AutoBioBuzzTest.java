@@ -20,25 +20,25 @@ import com.qualcomm.robotcore.util.Range;
  * Uses the same intake power and gate positions as StrikersConfig.
  *
  * Sequence: gate closed -> intake on -> flywheel on -> wait -> gate open -> wait -> gate closed
- *           -> drive forward -> wait -> drive back -> gate open -> wait -> strafe right -> turn
+ *           -> drive forward -> drive back -> strafe right -> turn
  *           -> drive forward. Intake and flywheel run to the end.
  */
 @Config
-@Autonomous(name = "BB-Auto-Red-First", group = "Auto")
-public class BBAutoRedFirst extends LinearOpMode {
+@Autonomous(name = "AutoBioBuzzTest", group = "Auto")
+public class AutoBioBuzzTest extends LinearOpMode {
 
     public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
-    public static double GATE_OPEN_SEC = 3.0;     // gate open, shooting
-    public static double DRIVE_DISTANCE_IN = 30.0; // forward move after shooting, then back the same distance
-    public static double WAIT_AFTER_DRIVE_SEC = 3.0; // pause at the far point before driving back
-    public static double WAIT_AFTER_GATE_OPEN_SEC = 3.0; // pause with the gate open back at the start line
-    public static double STRAFE_RIGHT_IN = 30.0;  // sideways move to the right at the end
+    public static double GATE_OPEN_SEC = 2.0;     // gate open, shooting
+    public static double DRIVE_DISTANCE_IN = 24.0; // forward move after shooting, then back the same distance
+    public static double STRAFE_RIGHT_IN = 12.0;  // sideways move to the right at the end
     public static double TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after the strafe
-    public static double MOVE_AFTER_TURN_IN = 30.0; // forward move (robot's front) after the turn
-    public static double SECOND_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after that move
-    public static double THIRD_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn before the final move
-    public static double FINAL_MOVE_IN = 30.0;    // last forward move (robot's front)
+    public static double MOVE_AFTER_TURN_IN = 50.0; // forward move (robot's front) after the turn
+    public static double SECOND_TURN_ANTICLOCKWISE_DEG = 90.0; // anticlockwise turn after that move
+    public static double FINAL_TURN_CLOCKWISE_DEG = 180.0; // clockwise turn before the final move
+    public static double EXTRA_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after the 12 in move
+    public static double EXTRA_MOVE_IN = 50.0;    // forward move after that turn
+    public static double FINAL_MOVE_IN = 12.0;    // last forward move (robot's front)
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
@@ -97,21 +97,13 @@ public class BBAutoRedFirst extends LinearOpMode {
                             .build());
         }
 
-        // Wait, then drive back to the start line.
-        holdFlywheel(flywheelRPM, WAIT_AFTER_DRIVE_SEC, "Waiting at far point");
-
+        // Drive back to the start line.
         if (opModeIsActive()) {
             runWithFlywheel(
                     drive.actionBuilder(drive.localizer.getPose())
                             .lineToX(0)
                             .build());
         }
-
-        // Back at the start line: open the gate, wait.
-        if (opModeIsActive()) {
-            gate.setPosition(StrikersConfig.OPEN_POSITION);
-        }
-        holdFlywheel(flywheelRPM, WAIT_AFTER_GATE_OPEN_SEC, "Gate open at start line");
 
         // Strafe right. In Road Runner +Y is left, so right is -Y.
         if (opModeIsActive()) {
@@ -142,19 +134,26 @@ public class BBAutoRedFirst extends LinearOpMode {
                             .build());
         }
 
-        // Turn clockwise again.
+        // Turn anticlockwise (Road Runner counterclockwise is positive).
         if (opModeIsActive()) {
             runWithFlywheel(
                     drive.actionBuilder(drive.localizer.getPose())
-                            .turn(-Math.toRadians(SECOND_TURN_CLOCKWISE_DEG))
+                            .turn(Math.toRadians(SECOND_TURN_ANTICLOCKWISE_DEG))
                             .build());
         }
 
-        // Turn clockwise a third time.
+        // Open the gate and shoot again, then close it.
+        if (opModeIsActive()) {
+            gate.setPosition(StrikersConfig.OPEN_POSITION);
+        }
+        holdFlywheel(flywheelRPM, GATE_OPEN_SEC, "Gate open (second shot)");
+        gate.setPosition(StrikersConfig.CLOSED_POSITION);
+
+        // Turn clockwise 180. In Road Runner counterclockwise is positive, so the angle is negated.
         if (opModeIsActive()) {
             runWithFlywheel(
                     drive.actionBuilder(drive.localizer.getPose())
-                            .turn(-Math.toRadians(THIRD_TURN_CLOCKWISE_DEG))
+                            .turn(-Math.toRadians(FINAL_TURN_CLOCKWISE_DEG))
                             .build());
         }
 
@@ -167,6 +166,26 @@ public class BBAutoRedFirst extends LinearOpMode {
                             .strafeTo(new Vector2d(
                                     here.position.x + FINAL_MOVE_IN * Math.cos(heading),
                                     here.position.y + FINAL_MOVE_IN * Math.sin(heading)))
+                            .build());
+        }
+
+        // Turn clockwise 90. In Road Runner counterclockwise is positive, so the angle is negated.
+        if (opModeIsActive()) {
+            runWithFlywheel(
+                    drive.actionBuilder(drive.localizer.getPose())
+                            .turn(-Math.toRadians(EXTRA_TURN_CLOCKWISE_DEG))
+                            .build());
+        }
+
+        // Move forward along the robot's current heading.
+        if (opModeIsActive()) {
+            Pose2d here = drive.localizer.getPose();
+            double heading = here.heading.toDouble();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .strafeTo(new Vector2d(
+                                    here.position.x + EXTRA_MOVE_IN * Math.cos(heading),
+                                    here.position.y + EXTRA_MOVE_IN * Math.sin(heading)))
                             .build());
         }
 
