@@ -146,7 +146,11 @@ public class BioBuzzCentricRedWarriors extends LinearOpMode {
         while (opModeIsActive()) {
 
             // Update Limelight Vision Subsystem filtered strictly by RED alliance tags (31, 32, 35, 36)
-            visionSubsystem.update(isRedAlliance);
+            // Camera/AprilTag processing and Dashboard stream only run while auto-aim is ON (saves CPU)
+            visionSubsystem.setCameraActive(autoAimActive);
+            if (autoAimActive) {
+                visionSubsystem.update(isRedAlliance);
+            }
 
             // ==========================================
             // GAMEPAD 1: MECANUM DRIVE & INTAKE (Gamepad 1 ONLY)
