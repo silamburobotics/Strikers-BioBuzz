@@ -33,9 +33,8 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
     public static double FALLBACK_TURN_ANTICLOCKWISE_DEG = 180.0; // fallback: anticlockwise turn after moving back
     public static double FALLBACK_WAIT_SEC = 3.0;  // fallback: wait (shooting) with the gate already open
     public static double FALLBACK_TURN_CLOCKWISE_DEG = 180.0; // fallback: clockwise turn after shooting
-    public static double FALLBACK_MOVE_IN = 24.0;  // fallback: forward move after the clockwise turn
-    public static double FALLBACK_SECOND_MOVE_IN = 75.0;  // fallback: last forward move
-    public static double FALLBACK_SHIFT_LEFT_IN = 60.0; // fallback: sideways shift to the left after the last forward move
+    public static double FALLBACK_SECOND_MOVE_IN = 90.0;  // fallback: last forward move
+    public static double FALLBACK_SHIFT_RIGHT_IN = 60.0; // fallback: sideways shift to the right after the last forward move
     public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 3.0;     // gate open, shooting
@@ -242,7 +241,7 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
     /**
      * Fallback when no AprilTag is found within TAG_TIMEOUT_SEC.
      * Flywheel on (gate stays open, intake off) -> back up -> turn anticlockwise -> intake on -> wait (shooting)
-     * -> turn clockwise -> gate closed -> move forward -> move forward -> shift left. Intake and flywheel keep running to the end.
+     * -> turn clockwise -> gate closed -> move forward -> shift right. Intake and flywheel keep running to the end.
      */
     private void runFallbackSequence(MecanumDrive drive, DcMotorEx intake, Servo gate, double flywheelRPM) {
         // Gate stays open (as set at INIT). Intake stays off. Flywheel ON.
@@ -289,32 +288,20 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
             runWithFlywheel(
                     drive.actionBuilder(here)
                             .strafeTo(new Vector2d(
-                                    here.position.x + FALLBACK_MOVE_IN * Math.cos(heading),
-                                    here.position.y + FALLBACK_MOVE_IN * Math.sin(heading)))
-                            .build());
-        }
-
-        // Move forward along the robot's current heading.
-        if (opModeIsActive()) {
-            Pose2d here = drive.localizer.getPose();
-            double heading = here.heading.toDouble();
-            runWithFlywheel(
-                    drive.actionBuilder(here)
-                            .strafeTo(new Vector2d(
                                     here.position.x + FALLBACK_SECOND_MOVE_IN * Math.cos(heading),
                                     here.position.y + FALLBACK_SECOND_MOVE_IN * Math.sin(heading)))
                             .build());
         }
 
-        // Shift left (sideways, heading held). Left of the robot's heading is (-sin, cos).
+        // Shift right (sideways, heading held). Right of the robot's heading is (sin, -cos).
         if (opModeIsActive()) {
             Pose2d here = drive.localizer.getPose();
             double heading = here.heading.toDouble();
             runWithFlywheel(
                     drive.actionBuilder(here)
                             .strafeTo(new Vector2d(
-                                    here.position.x - FALLBACK_SHIFT_LEFT_IN * Math.sin(heading),
-                                    here.position.y + FALLBACK_SHIFT_LEFT_IN * Math.cos(heading)))
+                                    here.position.x + FALLBACK_SHIFT_RIGHT_IN * Math.sin(heading),
+                                    here.position.y - FALLBACK_SHIFT_RIGHT_IN * Math.cos(heading)))
                             .build());
         }
 
