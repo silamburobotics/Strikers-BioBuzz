@@ -532,7 +532,7 @@ public class LimelightShooterSubsystem {
         cameraActive = active;
         try {
             if (active) {
-                if (limelight != null) limelight.resume();
+                if (limelight != null) limelight.start(); // start() resumes polling after pause()
                 if (visionPortal != null) {
                     visionPortal.setProcessorEnabled(aprilTagProcessor, true);
                     visionPortal.resumeLiveView();
