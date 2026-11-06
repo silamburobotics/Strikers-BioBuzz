@@ -32,8 +32,8 @@ public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
     public static double FALLBACK_BACK_IN = 106.0;  // fallback: move back
     public static double FALLBACK_TURN_ANTICLOCKWISE_DEG = 180.0; // fallback: anticlockwise turn after moving back
     public static double FALLBACK_WAIT_SEC = 3.0;  // fallback: wait (shooting) with the gate already open
-    public static double FALLBACK_SECOND_MOVE_IN = 90.0;  // fallback: second move back (after the gate closes)
-    public static double FALLBACK_SHIFT_RIGHT_IN = 60.0; // fallback: sideways shift to the right after the last forward move
+    public static double FALLBACK_SECOND_MOVE_IN = 100.0;  // fallback: second move back (after the gate closes)
+    public static double FALLBACK_SHIFT_RIGHT_IN = 50.0; // fallback: sideways shift to the right after the last forward move
     public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 3.0;     // gate open, shooting
