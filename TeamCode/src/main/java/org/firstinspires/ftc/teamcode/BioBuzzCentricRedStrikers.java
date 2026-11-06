@@ -28,6 +28,7 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
 
     // State variables
     private boolean isIntakeLiftUp = true;               // Default UP position
+    private final com.qualcomm.robotcore.util.ElapsedTime gateOpenTimer = new com.qualcomm.robotcore.util.ElapsedTime();
     private boolean isGateOpen = false;                 // false = Closed, true = Open
     private boolean isShifterOpen = false;              // false = Closed, true = Open
     private double targetTurretAngle = 0.0;             // Target angle in degrees (-90.0 to +90.0)
@@ -212,12 +213,23 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
             // ==========================================
 
             // --- Axon Gate Servo (G2.B = Open, G2.X = Close) ---
+            boolean wasGateOpen = isGateOpen;
             if (gamepad2.b) {
                 isGateOpen = true;
             } else if (gamepad2.x) {
                 isGateOpen = false;
             }
-            double targetGatePos = isGateOpen ? StrikersConfig.OPEN_POSITION : StrikersConfig.CLOSED_POSITION;
+            if (isGateOpen && !wasGateOpen) {
+                gateOpenTimer.reset(); // gate just started opening: begin the kick
+            }
+            double targetGatePos;
+            if (!isGateOpen) {
+                targetGatePos = StrikersConfig.CLOSED_POSITION;
+            } else if (gateOpenTimer.milliseconds() < StrikersConfig.GATE_KICK_MS) {
+                targetGatePos = StrikersConfig.GATE_KICK_POSITION; // opens to the kick position first...
+            } else {
+                targetGatePos = StrikersConfig.OPEN_POSITION;      // ...then comes back to the open position
+            }
             axonGateServo.setPosition(targetGatePos);
 
             // --- Shifter Servo (Gamepad 2: Button A = Toggle Open / Closed) ---

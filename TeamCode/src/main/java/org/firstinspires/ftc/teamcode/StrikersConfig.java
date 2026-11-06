@@ -31,6 +31,8 @@ public class StrikersConfig {
     public static String GATE_SERVO = "gateServo";
     public static double OPEN_POSITION = 0.4;             // Gate Open position
     public static double CLOSED_POSITION = 0.7;           // Gate Closed position
+    public static double GATE_KICK_POSITION = 0.2;        // When the gate opens it first goes here...
+    public static double GATE_KICK_MS = 200.0;            // ...for this many ms, then comes back to OPEN_POSITION
 
     public static String SHIFTER_SERVO = "shifterServo";
     public static double SHIFTER_OPEN_POSITION = 0.25;    // Shifter Open position (Nectar)

@@ -105,7 +105,7 @@ public class AutoBioBuzzTest extends LinearOpMode {
         holdFlywheel(flywheelRPM, SPINUP_WAIT_SEC, "Spinning up");
 
         // Open gate, wait.
-        gate.setPosition(StrikersConfig.OPEN_POSITION);
+        openGateWithKick(gate, flywheelRPM);
         holdFlywheel(flywheelRPM, GATE_OPEN_SEC, "Gate open");
 
         // Close gate. The flywheel keeps running to the end of the sequence.
@@ -193,7 +193,7 @@ public class AutoBioBuzzTest extends LinearOpMode {
 
         // Open the gate and shoot again, then close it.
         if (opModeIsActive()) {
-            gate.setPosition(StrikersConfig.OPEN_POSITION);
+            openGateWithKick(gate, flywheelRPM);
         }
         holdFlywheel(flywheelRPM, SECOND_SHOT_SEC, "Gate open (second shot)");
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
@@ -227,6 +227,13 @@ public class AutoBioBuzzTest extends LinearOpMode {
             telemetry.update();
             sleep(20);
         }
+    }
+
+    /** Opens the gate with a kick: goes to GATE_KICK_POSITION for GATE_KICK_MS, then settles at OPEN_POSITION. */
+    private void openGateWithKick(Servo gate, double flywheelRPM) {
+        gate.setPosition(StrikersConfig.GATE_KICK_POSITION);
+        holdFlywheel(flywheelRPM, StrikersConfig.GATE_KICK_MS / 1000.0, "Gate kick");
+        gate.setPosition(StrikersConfig.OPEN_POSITION);
     }
 
     /** Like Actions.runBlocking, but keeps the flywheel control loop running while the action runs. */

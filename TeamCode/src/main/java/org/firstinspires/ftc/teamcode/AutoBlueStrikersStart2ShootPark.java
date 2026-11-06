@@ -29,26 +29,27 @@ import com.qualcomm.robotcore.util.Range;
 public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 8.0;   // give up looking for an AprilTag after this long and run the fallback sequence
-    public static double FALLBACK_BACK_IN = 90.0;  // fallback: move back
+    public static double FALLBACK_BACK_IN = 100.0;  // fallback: move back
     public static double FALLBACK_TURN_ANTICLOCKWISE_DEG = 180.0; // fallback: anticlockwise turn after moving back
     public static double FALLBACK_WAIT_SEC = 3.0;  // fallback: wait before opening the gate
     public static double FALLBACK_GATE_OPEN_SEC = 3.0; // fallback: gate open, shooting
     public static double FALLBACK_TURN_CLOCKWISE_DEG = 90.0; // fallback: clockwise turn after shooting
     public static double FALLBACK_MOVE_IN = 24.0;  // fallback: forward move after the clockwise turn
     public static double FALLBACK_SECOND_TURN_CLOCKWISE_DEG = 90.0; // fallback: clockwise turn after that move
-    public static double FALLBACK_SECOND_MOVE_IN = 70.0;  // fallback: last forward move
+    public static double FALLBACK_SECOND_MOVE_IN = 80.0;  // fallback: last forward move
+    public static double FALLBACK_SHIFT_LEFT_IN = 12.0; // fallback: sideways shift to the left after the last forward move
     public static double FLYWHEEL_RPM = 2700.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 3.0;     // gate open, shooting
-    public static double DRIVE_DISTANCE_IN = 12.0; // drive back right after intake and flywheel start
+    public static double DRIVE_DISTANCE_IN = 10.0; // drive back right after intake and flywheel start
     public static double SHAKE_IN = 1.0;          // shake distance: back this far, then forward this far
     public static int SHAKE_COUNT = 2;            // number of back-and-forward shakes at the far point
-    public static double A_SHIFT_LEFT_IN = 10.0;  // sideways shift to the left after the shot
-    public static double A_SECOND_MOVE_IN = 6.0;  // forward move after the shift left, then shake again
-    public static double A_BACK_IN = 10.0;        // move back after the second shake
-    public static double A_SHIFT_RIGHT_IN = 10.0; // sideways shift to the right after moving back
+    public static double A_SHIFT_LEFT_IN = 14.0;  // sideways shift to the left after the shot
+    public static double A_SECOND_MOVE_IN = 4.0;  // forward move after the shift left, then shake again
+    public static double A_BACK_IN = 6.0;        // move back after the second shake
+    public static double A_SHIFT_RIGHT_IN = 14.0; // sideways shift to the right after moving back
     public static double SECOND_SHOT_SEC = 3.0;   // gate open, second shot
-    public static double A_FINAL_SHIFT_LEFT_IN = 50.0; // last sideways shift to the left
+    public static double A_FINAL_SHIFT_LEFT_IN = 58.0; // last sideways shift to the left
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
@@ -141,7 +142,7 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
         holdFlywheel(flywheelRPM, SPINUP_WAIT_SEC, "Spinning up");
 
         // Open gate, wait.
-        gate.setPosition(StrikersConfig.OPEN_POSITION);
+        openGateWithKick(gate, flywheelRPM);
         holdFlywheel(flywheelRPM, GATE_OPEN_SEC, "Gate open");
 
         // Close gate. The flywheel keeps running to the end of the sequence.
@@ -210,7 +211,7 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
 
         // Gate open, wait (shooting), then gate closed.
         if (opModeIsActive()) {
-            gate.setPosition(StrikersConfig.OPEN_POSITION);
+            openGateWithKick(gate, flywheelRPM);
         }
         holdFlywheel(flywheelRPM, SECOND_SHOT_SEC, "Gate open (second shot)");
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
@@ -268,7 +269,7 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
         // Wait with the flywheel running, then open the gate and wait (shooting).
         holdFlywheel(flywheelRPM, FALLBACK_WAIT_SEC, "Fallback: waiting");
         if (opModeIsActive()) {
-            gate.setPosition(StrikersConfig.OPEN_POSITION);
+            openGateWithKick(gate, flywheelRPM);
         }
         holdFlywheel(flywheelRPM, FALLBACK_GATE_OPEN_SEC, "Fallback: gate open");
 
@@ -315,6 +316,18 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
                             .build());
         }
 
+        // Shift left (sideways, heading held). Left of the robot's heading is (-sin, cos).
+        if (opModeIsActive()) {
+            Pose2d here = drive.localizer.getPose();
+            double heading = here.heading.toDouble();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .strafeTo(new Vector2d(
+                                    here.position.x - FALLBACK_SHIFT_LEFT_IN * Math.sin(heading),
+                                    here.position.y + FALLBACK_SHIFT_LEFT_IN * Math.cos(heading)))
+                            .build());
+        }
+
         // Intake and flywheel keep running until the period ends.
         while (opModeIsActive()) {
             double rpm1 = updateFlywheel(flywheelRPM);
@@ -340,6 +353,13 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
                             .lineToX(back.position.x + SHAKE_IN)
                             .build());
         }
+    }
+
+    /** Opens the gate with a kick: goes to GATE_KICK_POSITION for GATE_KICK_MS, then settles at OPEN_POSITION. */
+    private void openGateWithKick(Servo gate, double flywheelRPM) {
+        gate.setPosition(StrikersConfig.GATE_KICK_POSITION);
+        holdFlywheel(flywheelRPM, StrikersConfig.GATE_KICK_MS / 1000.0, "Gate kick");
+        gate.setPosition(StrikersConfig.OPEN_POSITION);
     }
 
     /** Like Actions.runBlocking, but keeps the flywheel control loop running while the action runs. */

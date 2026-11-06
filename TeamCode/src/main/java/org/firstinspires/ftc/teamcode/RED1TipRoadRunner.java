@@ -258,6 +258,13 @@ public class RED1TipRoadRunner extends LinearOpMode {
         }
 
         // Feeding phase
+        // Gate opens with a kick: GATE_KICK_POSITION for GATE_KICK_MS, then back to GATE_OPEN.
+        gate.setPosition(StrikersConfig.GATE_KICK_POSITION);
+        ElapsedTime kickTimer = new ElapsedTime();
+        while (opModeIsActive() && kickTimer.milliseconds() < StrikersConfig.GATE_KICK_MS) {
+            updateShooter();
+            sleep(10);
+        }
         gate.setPosition(GATE_OPEN);
         intake.setPower(INTAKE_POWER);
         timer.reset();
