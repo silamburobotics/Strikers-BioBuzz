@@ -141,13 +141,18 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
         boolean lastIntakeLBState = false;
         boolean lastShifterAState = false;
         boolean lastShooterYState = false;
-        boolean lastAutoAimLBState = false;
+        boolean lastAutoAimRBState = false;
         double lastIntakePower = Double.NaN;
 
         while (opModeIsActive()) {
 
             // Update Limelight Vision Subsystem filtered strictly by RED alliance tags (31, 32, 35, 36)
-            visionSubsystem.update(isRedAlliance);
+            // Camera/AprilTag processing only runs while auto-aim is engaged (R1 toggle or L1 held) to save CPU
+            boolean visionNeeded = autoAimActive || gamepad2.left_bumper;
+            visionSubsystem.setCameraActive(visionNeeded);
+            if (visionNeeded) {
+                visionSubsystem.update(isRedAlliance);
+            }
 
             // ==========================================
             // GAMEPAD 1: MECANUM DRIVE & INTAKE
@@ -228,34 +233,38 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
             double targetShifterPos = isShifterOpen ? StrikersConfig.SHIFTER_OPEN_POSITION : StrikersConfig.SHIFTER_CLOSED_POSITION;
             shifterServo.setPosition(targetShifterPos);
 
-            // --- Auto-Aim Toggle (Gamepad 2: Left Bumper) ---
-            if (gamepad2.left_bumper && !lastAutoAimLBState) {
+            // --- Auto-Aim Controls (Gamepad 2: R1 / Right Bumper = Toggle ON/OFF, L1 / Left Bumper = Hold-to-Aim) ---
+            if (gamepad2.right_bumper && !lastAutoAimRBState) {
                 autoAimActive = !autoAimActive;
                 if (!autoAimActive) {
                     visionSubsystem.resetLock();
+                    targetTurretAngle = 0.0; // Return turret to 0° (center home) when G2.R1 toggle is turned OFF
                 }
             }
-            lastAutoAimLBState = gamepad2.left_bumper;
+            lastAutoAimRBState = gamepad2.right_bumper;
+
+            // Active if toggled ON via G2.R1 OR held down via G2.L1
+            boolean isAutoAimEngaged = autoAimActive || gamepad2.left_bumper;
 
             // --- Turret Auto-Aim to AprilTag when active, otherwise Center Home (0.0°) ---
             double ticksPerDegree = (StrikersConfig.TURRET_TICKS_PER_REV * StrikersConfig.TURRET_GEAR_RATIO) / 360.0;
             double currentTurretAngle = turret.getCurrentPosition() / ticksPerDegree;
 
-            if (autoAimActive && visionSubsystem.isTargetVisible()) {
+            if (isAutoAimEngaged && visionSubsystem.isTargetVisible()) {
                 if (Math.abs(visionSubsystem.getTxError()) > LimelightShooterSubsystem.AIM_DEADBAND_DEG) {
                     targetTurretAngle = visionSubsystem.getTurretTargetAngle(currentTurretAngle);
                 }
-            } else {
-                targetTurretAngle = 0.0; // Center home position when target is not visible or auto-aim is OFF
+            } else if (gamepad2.dpad_down) {
+                targetTurretAngle = 0.0; // Manual center home reset via G2.DPad-Down
             }
             targetTurretAngle = Range.clip(targetTurretAngle, -StrikersConfig.TURRET_MAX_ANGLE_DEG, StrikersConfig.TURRET_MAX_ANGLE_DEG);
 
             int targetTurretTicks = (int) Math.round(targetTurretAngle * ticksPerDegree);
             turret.setTargetPosition(targetTurretTicks);
+            turret.setPower(StrikersConfig.TURRET_MAX_POWER);
 
             double maxTurretVelocity = StrikersConfig.TURRET_MAX_VELOCITY_DEG_PER_SEC * ticksPerDegree;
             turret.setVelocity(maxTurretVelocity);
-            turret.setPower(StrikersConfig.TURRET_MAX_POWER);
 
             // --- Shooter Flywheel Control (Gamepad 2: Y = Toggle ON/OFF) ---
             if (gamepad2.y && !lastShooterYState) {
@@ -304,6 +313,7 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
                     targetLeftLiftPos, targetRightLiftPos);
 
             telemetry.addData("--- Vision & Shooter Status ---", "");
+            telemetry.addData("AprilTags in View", visionSubsystem.getTagsSeenSummary());
             if (visionSubsystem.isTargetVisible()) {
                 boolean isAimed = visionSubsystem.isAimed();
                 telemetry.addData("Limelight Target", "%s Tag #%d | tx: %.1f° | ty: %.1f° | Dist: %.1fin",
@@ -313,7 +323,10 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
                 telemetry.addData("Limelight Target", "[SEARCHING] Looking for RED tags (31, 32, 35, 36)...");
             }
 
-            telemetry.addData("Turret Auto-Aim (G2.LB)", autoAimActive ? "ACTIVE" : "OFF");
+            telemetry.addData("Turret Auto-Aim", "G2.R1 Toggle: %s | G2.L1 Hold: %s (Status: %s)",
+                    autoAimActive ? "ON" : "OFF",
+                    gamepad2.left_bumper ? "HELD" : "RELEASED",
+                    isAutoAimEngaged ? "ACTIVE" : "OFF (Center Home)");
             telemetry.addData("Turret Angle", "Target: %.1f° | Current: %.1f° (%d ticks)",
                     targetTurretAngle, currentTurretAngle, turret.getCurrentPosition());
             telemetry.addData("Shooter Flywheel (G2.Y)", StrikersConfig.FLYWHEEL_ENABLED ? "RUNNING (Target: %.0f RPM)" : "STOPPED", currentTargetRPM);

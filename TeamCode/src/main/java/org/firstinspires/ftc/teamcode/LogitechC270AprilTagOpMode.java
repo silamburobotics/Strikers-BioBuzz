@@ -93,11 +93,11 @@ public class LogitechC270AprilTagOpMode extends LinearOpMode {
             List<AprilTagDetection> currentDetections = aprilTagProcessor.getDetections();
             AprilTagSingleDetection targetDetection = null;
 
-            if (currentDetections != null) {
+            if (currentDetections != null && !currentDetections.isEmpty()) {
                 for (AprilTagDetection detection : currentDetections) {
                     if (detection instanceof AprilTagSingleDetection) {
                         AprilTagSingleDetection singleDet = (AprilTagSingleDetection) detection;
-                        if (singleDet.metadata != null) {
+                        if (singleDet.ftcPose != null) {
                             if (DESIRED_TAG_ID < 0 || singleDet.id == DESIRED_TAG_ID) {
                                 targetDetection = singleDet;
                                 break;
@@ -118,7 +118,8 @@ public class LogitechC270AprilTagOpMode extends LinearOpMode {
                 double bearingDeg = targetDetection.ftcPose.bearing;    // Horizontal angle in degrees
                 double elevationDeg = targetDetection.ftcPose.elevation;// Elevation angle in degrees
 
-                telemetry.addData("=== Target Locked ===", "AprilTag ID %d (%s)", targetDetection.id, targetDetection.metadata.name);
+                String tagName = (targetDetection.metadata != null && targetDetection.metadata.name != null) ? targetDetection.metadata.name : "AprilTag";
+                telemetry.addData("=== Target Locked ===", "AprilTag ID %d (%s)", targetDetection.id, tagName);
                 telemetry.addData("Range (Distance)", "%.1f inches", rangeInches);
                 telemetry.addData("Bearing (Angle)", "%.1f deg", bearingDeg);
                 telemetry.addData("Elevation", "%.1f deg", elevationDeg);
@@ -142,10 +143,10 @@ public class LogitechC270AprilTagOpMode extends LinearOpMode {
                 if (flywheelEnabled) {
                     double targetTicksPerSec = (targetFlywheelRPM / 60.0) * FLYWHEEL_TICKS_PER_REV;
                     flywheelMotor1.setVelocity(targetTicksPerSec);
-                    flywheelMotor2.setVelocity(targetTicksPerSec);
+                    flywheelMotor2.setPower(flywheelMotor1.getPower());
                 } else {
                     flywheelMotor1.setVelocity(0);
-                    flywheelMotor2.setVelocity(0);
+                    flywheelMotor2.setPower(0);
                 }
             }
 
@@ -154,13 +155,12 @@ public class LogitechC270AprilTagOpMode extends LinearOpMode {
             }
 
             // Telemetry Output
-            double currentRPM1 = (flywheelMotor1 != null) ? (flywheelMotor1.getVelocity() / FLYWHEEL_TICKS_PER_REV) * 60.0 : 0.0;
-            double currentRPM2 = (flywheelMotor2 != null) ? (flywheelMotor2.getVelocity() / FLYWHEEL_TICKS_PER_REV) * 60.0 : 0.0;
+            double currentRPM1 = (flywheelMotor1 != null) ? Math.abs((flywheelMotor1.getVelocity() / FLYWHEEL_TICKS_PER_REV) * 60.0) : 0.0;
 
             telemetry.addData("=== Shooter Status ===", flywheelEnabled ? "ACTIVE" : "DISABLED");
             telemetry.addData("Target RPM", "%.0f", targetFlywheelRPM);
-            telemetry.addData("Flywheel 1 RPM", "%.0f", currentRPM1);
-            telemetry.addData("Flywheel 2 RPM", "%.0f", currentRPM2);
+            telemetry.addData("Flywheel 1 RPM (Master)", "%.0f", currentRPM1);
+            telemetry.addData("Flywheel 2 Power (Slave)", "%.0f%%", (flywheelMotor2 != null) ? flywheelMotor2.getPower() * 100.0 : 0.0);
             telemetry.addData("Hood Servo Pos", "%.2f", targetHoodPosition);
             telemetry.addData("Auto-Aim Mode (A)", autoAimEnabled ? "ON" : "OFF");
             telemetry.update();
@@ -171,7 +171,7 @@ public class LogitechC270AprilTagOpMode extends LinearOpMode {
             visionPortal.close();
         }
         if (flywheelMotor1 != null) flywheelMotor1.setVelocity(0);
-        if (flywheelMotor2 != null) flywheelMotor2.setVelocity(0);
+        if (flywheelMotor2 != null) flywheelMotor2.setPower(0);
         if (intakeMotor != null) intakeMotor.setPower(0);
     }
 
@@ -204,11 +204,15 @@ public class LogitechC270AprilTagOpMode extends LinearOpMode {
         // Build VisionPortal for Logitech C270 (640x480 resolution)
         visionPortal = new VisionPortal.Builder()
                 .setCamera(webcamName)
-                .setCameraResolution(new Size(640, 480)) // Native 720p/480p resolution for Logitech C270
+                .setCameraResolution(new Size(640, 480))
                 .addProcessor(aprilTagProcessor)
                 .enableLiveView(true)
                 .setAutoStopLiveView(true)
                 .build();
+
+        try {
+            FtcDashboard.getInstance().startCameraStream(visionPortal, 15);
+        } catch (Exception ignored) {}
     }
 
     /**
@@ -216,12 +220,10 @@ public class LogitechC270AprilTagOpMode extends LinearOpMode {
      */
     private void initHardware() {
         try {
-            flywheelMotor1 = hardwareMap.get(DcMotorEx.class, "flywheelMotor1");
-            flywheelMotor2 = hardwareMap.get(DcMotorEx.class, "flywheelMotor2");
-            flywheelMotor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            flywheelMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            flywheelMotor1 = hardwareMap.get(DcMotorEx.class, "flyWheel1");
+            flywheelMotor2 = hardwareMap.get(DcMotorEx.class, "flyWheel2");
             flywheelMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            flywheelMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            flywheelMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             flywheelMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
             flywheelMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         } catch (Exception e) {

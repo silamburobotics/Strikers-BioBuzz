@@ -304,6 +304,7 @@ public class BioBuzzCentricRedWarriors extends LinearOpMode {
                     targetLeftLiftPos, targetRightLiftPos);
 
             telemetry.addData("--- Vision & Shooter Status ---", "");
+            telemetry.addData("AprilTags in View", visionSubsystem.getTagsSeenSummary());
             if (visionSubsystem.isTargetVisible()) {
                 boolean isAimed = visionSubsystem.isAimed();
                 telemetry.addData("Limelight Target", "%s Tag #%d | tx: %.1f° | ty: %.1f° | Dist: %.1fin",
