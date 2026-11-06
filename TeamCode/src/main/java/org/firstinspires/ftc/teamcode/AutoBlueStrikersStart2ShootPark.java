@@ -69,6 +69,15 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
         shifter.setPosition(StrikersConfig.SHIFTER_CLOSED_POSITION);
 
+        // Right intake lift servo, same as teleop: starts UP. (null if it is not in the robot configuration)
+        Servo intakeLiftRight;
+        try {
+            intakeLiftRight = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_RIGHT_NAME);
+        } catch (Exception e) {
+            intakeLiftRight = null;
+        }
+        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS);
+
         // Flywheels
         shooter1 = hardwareMap.get(DcMotorEx.class, StrikersConfig.MOTOR_1_NAME);
         shooter2 = hardwareMap.get(DcMotorEx.class, StrikersConfig.MOTOR_2_NAME);
@@ -150,6 +159,11 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
                             .build());
         }
 
+        // Bring the right intake lift DOWN (same position as teleop's bumper-held DOWN).
+        if (intakeLiftRight != null) {
+            intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_RIGHT_DOWN_POS);
+        }
+
         // Move forward along the robot's current heading.
         if (opModeIsActive()) {
             Pose2d here = drive.localizer.getPose();
@@ -175,6 +189,11 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
                                     here.position.x - A_BACK_IN * Math.cos(heading),
                                     here.position.y - A_BACK_IN * Math.sin(heading)))
                             .build());
+        }
+
+        // Bring the right intake lift back UP.
+        if (intakeLiftRight != null) {
+            intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS);
         }
 
         // Shift right (sideways, heading held). Right of the robot's heading is (sin, -cos).
