@@ -27,18 +27,21 @@ import com.qualcomm.robotcore.util.Range;
 @Autonomous(name = "AutoBioBuzzTest", group = "Auto")
 public class AutoBioBuzzTest extends LinearOpMode {
 
+    public static boolean IS_RED_ALLIANCE = true; // which alliance's AprilTags count as detected (true = red tags, false = blue)
     public static double FLYWHEEL_RPM = 2500.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 2.0;     // gate open, shooting
     public static double SECOND_SHOT_SEC = 3.0;   // gate open, second shot (after the turn)
     public static double DRIVE_DISTANCE_IN = 24.0; // forward move after shooting, then back the same distance
+    public static double SHAKE_IN = 1.0;          // shake distance: back this far, then forward this far
+    public static int SHAKE_COUNT = 2;            // number of back-and-forward shakes at the far point
     public static double STRAFE_RIGHT_IN = 12.0;  // sideways move to the right at the end
     public static double TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after the strafe
-    public static double MOVE_AFTER_TURN_IN = 50.0; // forward move (robot's front) after the turn
+    public static double MOVE_AFTER_TURN_IN = 60.0; // forward move (robot's front) after the turn
     public static double SECOND_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after that move
     public static double EXTRA_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after the 12 in move
-    public static double EXTRA_MOVE_IN = 50.0;    // forward move after that turn
-    public static double FINAL_MOVE_IN = 12.0;    // last forward move (robot's front)
+    public static double EXTRA_MOVE_IN = 80.0;    // forward move after that turn
+    public static double FINAL_MOVE_IN = 36.0;    // forward move after the second turn (robot's front)
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
@@ -70,13 +73,32 @@ public class AutoBioBuzzTest extends LinearOpMode {
         shooter2.setDirection(StrikersConfig.MOTOR_2_REVERSED
                 ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
 
+        // Vision (Limelight 3A or Logitech C270, whichever is connected)
+        LimelightShooterSubsystem vision = new LimelightShooterSubsystem(hardwareMap);
+
         telemetry.addData("Status", "Ready - RED first auto");
         telemetry.update();
 
         waitForStart();
-        if (isStopRequested()) return;
+        if (isStopRequested()) {
+            vision.stop();
+            return;
+        }
 
         double flywheelRPM = FLYWHEEL_RPM;
+
+        // Step 1: wait until an AprilTag is detected before starting the sequence.
+        while (opModeIsActive()) {
+            vision.update(IS_RED_ALLIANCE);
+            boolean tagDetected = vision.isTargetVisible();
+            telemetry.addData("AprilTag", tagDetected ? "DETECTED - starting" : "NOT DETECTED - waiting");
+            telemetry.addData("Tags seen", vision.getTagsSeenSummary());
+            telemetry.update();
+            if (tagDetected) break;
+            sleep(20);
+        }
+        vision.stop(); // done with the camera
+        if (!opModeIsActive()) return;
 
         // Gate is closed. Start intake and flywheel, wait.
         intake.setPower(StrikersConfig.INTAKE_POWER);
@@ -94,6 +116,21 @@ public class AutoBioBuzzTest extends LinearOpMode {
             runWithFlywheel(
                     drive.actionBuilder(new Pose2d(0, 0, 0))
                             .lineToX(DRIVE_DISTANCE_IN)
+                            .build());
+        }
+
+        // Shake effect: 1 in back, then 1 in forward, repeated SHAKE_COUNT times.
+        for (int i = 0; i < SHAKE_COUNT && opModeIsActive(); i++) {
+            Pose2d here = drive.localizer.getPose();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .lineToX(here.position.x - SHAKE_IN)
+                            .build());
+            if (!opModeIsActive()) break;
+            Pose2d back = drive.localizer.getPose();
+            runWithFlywheel(
+                    drive.actionBuilder(back)
+                            .lineToX(back.position.x + SHAKE_IN)
                             .build());
         }
 
@@ -142,13 +179,6 @@ public class AutoBioBuzzTest extends LinearOpMode {
                             .build());
         }
 
-        // Open the gate and shoot again, then close it.
-        if (opModeIsActive()) {
-            gate.setPosition(StrikersConfig.OPEN_POSITION);
-        }
-        holdFlywheel(flywheelRPM, SECOND_SHOT_SEC, "Gate open (second shot)");
-        gate.setPosition(StrikersConfig.CLOSED_POSITION);
-
         // Move forward along the robot's current heading.
         if (opModeIsActive()) {
             Pose2d here = drive.localizer.getPose();
@@ -160,6 +190,13 @@ public class AutoBioBuzzTest extends LinearOpMode {
                                     here.position.y + FINAL_MOVE_IN * Math.sin(heading)))
                             .build());
         }
+
+        // Open the gate and shoot again, then close it.
+        if (opModeIsActive()) {
+            gate.setPosition(StrikersConfig.OPEN_POSITION);
+        }
+        holdFlywheel(flywheelRPM, SECOND_SHOT_SEC, "Gate open (second shot)");
+        gate.setPosition(StrikersConfig.CLOSED_POSITION);
 
         // Turn clockwise. In Road Runner counterclockwise is positive, so the angle is negated.
         if (opModeIsActive()) {
