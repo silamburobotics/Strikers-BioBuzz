@@ -39,12 +39,16 @@ public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
     public static double FALLBACK_SECOND_MOVE_IN = 100.0; // fallback: last forward move
     public static double FLYWHEEL_RPM = 2700.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
-    public static double GATE_OPEN_SEC = 2.0;     // gate open, shooting
-    public static double DRIVE_DISTANCE_IN = 24.0; // forward move after shooting, then back the same distance
+    public static double GATE_OPEN_SEC = 3.0;     // gate open, shooting
+    public static double DRIVE_DISTANCE_IN = 12.0; // drive back right after intake and flywheel start
     public static double SHAKE_IN = 1.0;          // shake distance: back this far, then forward this far
     public static int SHAKE_COUNT = 2;            // number of back-and-forward shakes at the far point
-    public static double MOVE_AFTER_TURN_IN = 55.0; // forward move (robot's front) after the turn
-    public static double SECOND_TURN_CLOCKWISE_DEG = 90.0; // clockwise turn after the shake
+    public static double A_SHIFT_LEFT_IN = 10.0;  // sideways shift to the left after the shot
+    public static double A_SECOND_MOVE_IN = 10.0; // forward move after the shift left, then shake again
+    public static double A_BACK_IN = 10.0;        // move back after the second shake
+    public static double A_SHIFT_RIGHT_IN = 10.0; // sideways shift to the right after moving back
+    public static double SECOND_SHOT_SEC = 3.0;   // gate open, second shot
+    public static double A_FINAL_SHIFT_LEFT_IN = 50.0; // last sideways shift to the left
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
@@ -111,8 +115,20 @@ public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
             return;
         }
 
-        // Gate is closed. Start intake and flywheel, wait.
+        // Gate is closed. Intake and flywheel ON (the flywheel control runs in every loop below).
         intake.setPower(StrikersConfig.INTAKE_POWER);
+        updateFlywheel(flywheelRPM);
+
+        // Drive back (flywheel keeps spinning up while driving).
+        if (opModeIsActive()) {
+            Pose2d here = drive.localizer.getPose();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .lineToX(here.position.x - DRIVE_DISTANCE_IN)
+                            .build());
+        }
+
+        // Wait for the flywheel to spin up.
         holdFlywheel(flywheelRPM, SPINUP_WAIT_SEC, "Spinning up");
 
         // Open gate, wait.
@@ -122,46 +138,73 @@ public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
         // Close gate. The flywheel keeps running to the end of the sequence.
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
 
-        // Move forward.
-        if (opModeIsActive()) {
-            runWithFlywheel(
-                    drive.actionBuilder(new Pose2d(0, 0, 0))
-                            .lineToX(DRIVE_DISTANCE_IN)
-                            .build());
-        }
-
-        // Shake effect: 1 in back, then 1 in forward, repeated SHAKE_COUNT times.
-        for (int i = 0; i < SHAKE_COUNT && opModeIsActive(); i++) {
-            Pose2d here = drive.localizer.getPose();
-            runWithFlywheel(
-                    drive.actionBuilder(here)
-                            .lineToX(here.position.x - SHAKE_IN)
-                            .build());
-            if (!opModeIsActive()) break;
-            Pose2d back = drive.localizer.getPose();
-            runWithFlywheel(
-                    drive.actionBuilder(back)
-                            .lineToX(back.position.x + SHAKE_IN)
-                            .build());
-        }
-
-        // Turn clockwise. In Road Runner counterclockwise is positive, so the angle is negated.
-        if (opModeIsActive()) {
-            runWithFlywheel(
-                    drive.actionBuilder(drive.localizer.getPose())
-                            .turn(-Math.toRadians(SECOND_TURN_CLOCKWISE_DEG))
-                            .build());
-        }
-
-        // Move forward along the robot's current heading (after the turn this is not field +X).
+        // Shift left (sideways, heading held). Left of the robot's heading is (-sin, cos).
         if (opModeIsActive()) {
             Pose2d here = drive.localizer.getPose();
             double heading = here.heading.toDouble();
             runWithFlywheel(
                     drive.actionBuilder(here)
                             .strafeTo(new Vector2d(
-                                    here.position.x + MOVE_AFTER_TURN_IN * Math.cos(heading),
-                                    here.position.y + MOVE_AFTER_TURN_IN * Math.sin(heading)))
+                                    here.position.x - A_SHIFT_LEFT_IN * Math.sin(heading),
+                                    here.position.y + A_SHIFT_LEFT_IN * Math.cos(heading)))
+                            .build());
+        }
+
+        // Move forward along the robot's current heading.
+        if (opModeIsActive()) {
+            Pose2d here = drive.localizer.getPose();
+            double heading = here.heading.toDouble();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .strafeTo(new Vector2d(
+                                    here.position.x + A_SECOND_MOVE_IN * Math.cos(heading),
+                                    here.position.y + A_SECOND_MOVE_IN * Math.sin(heading)))
+                            .build());
+        }
+
+        // Shake again.
+        shake(drive);
+
+        // Move back along the robot's current heading (opposite of forward).
+        if (opModeIsActive()) {
+            Pose2d here = drive.localizer.getPose();
+            double heading = here.heading.toDouble();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .strafeTo(new Vector2d(
+                                    here.position.x - A_BACK_IN * Math.cos(heading),
+                                    here.position.y - A_BACK_IN * Math.sin(heading)))
+                            .build());
+        }
+
+        // Shift right (sideways, heading held). Right of the robot's heading is (sin, -cos).
+        if (opModeIsActive()) {
+            Pose2d here = drive.localizer.getPose();
+            double heading = here.heading.toDouble();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .strafeTo(new Vector2d(
+                                    here.position.x + A_SHIFT_RIGHT_IN * Math.sin(heading),
+                                    here.position.y - A_SHIFT_RIGHT_IN * Math.cos(heading)))
+                            .build());
+        }
+
+        // Gate open, wait (shooting), then gate closed.
+        if (opModeIsActive()) {
+            gate.setPosition(StrikersConfig.OPEN_POSITION);
+        }
+        holdFlywheel(flywheelRPM, SECOND_SHOT_SEC, "Gate open (second shot)");
+        gate.setPosition(StrikersConfig.CLOSED_POSITION);
+
+        // Shift left (sideways, heading held). Left of the robot's heading is (-sin, cos).
+        if (opModeIsActive()) {
+            Pose2d here = drive.localizer.getPose();
+            double heading = here.heading.toDouble();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .strafeTo(new Vector2d(
+                                    here.position.x - A_FINAL_SHIFT_LEFT_IN * Math.sin(heading),
+                                    here.position.y + A_FINAL_SHIFT_LEFT_IN * Math.cos(heading)))
                             .build());
         }
 
@@ -260,6 +303,23 @@ public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
             telemetry.addData("Flywheel RPM", "target %.0f | measured %.0f", flywheelRPM, rpm1);
             telemetry.update();
             sleep(20);
+        }
+    }
+
+    /** Shake effect: SHAKE_IN back, then SHAKE_IN forward, repeated SHAKE_COUNT times (along the field X axis). */
+    private void shake(MecanumDrive drive) {
+        for (int i = 0; i < SHAKE_COUNT && opModeIsActive(); i++) {
+            Pose2d here = drive.localizer.getPose();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .lineToX(here.position.x - SHAKE_IN)
+                            .build());
+            if (!opModeIsActive()) break;
+            Pose2d back = drive.localizer.getPose();
+            runWithFlywheel(
+                    drive.actionBuilder(back)
+                            .lineToX(back.position.x + SHAKE_IN)
+                            .build());
         }
     }
 
