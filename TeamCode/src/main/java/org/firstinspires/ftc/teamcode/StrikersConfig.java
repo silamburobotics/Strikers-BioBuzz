@@ -24,8 +24,8 @@ public class StrikersConfig {
     public static String INTAKE_LIFT_RIGHT_NAME = "intakeLiftRight";
     public static double INTAKE_LIFT_UP_POS = 0.40;       // UP height position
     public static double INTAKE_LIFT_DOWN_POS = 0.80;     // DOWN height position
-    public static double INTAKE_LIFT_RIGHT_UP_POS = 0.76;   // Right lift servo UP position (used directly, not mirrored)
-    public static double INTAKE_LIFT_RIGHT_DOWN_POS = 0.38; // Right lift servo DOWN position (used directly, not mirrored)
+    public static double INTAKE_LIFT_RIGHT_UP_POS = 0.74;   // Right lift servo UP position (used directly, not mirrored)
+    public static double INTAKE_LIFT_RIGHT_DOWN_POS = 0.345; // Right lift servo DOWN position (used directly, not mirrored)
 
     // --- Axon Gate & Shifter Servos ---
     public static String GATE_SERVO = "gateServo";
