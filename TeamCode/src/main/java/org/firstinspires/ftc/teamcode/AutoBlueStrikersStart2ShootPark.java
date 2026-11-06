@@ -25,10 +25,18 @@ import com.qualcomm.robotcore.util.Range;
  *           -> drive forward. Intake and flywheel run to the end.
  */
 @Config
-@Autonomous(name = "AutoStrikersStart2-ShootPark", group = "Auto")
-public class AutoStrikersStart2ShootPark extends LinearOpMode {
+@Autonomous(name = "AutoBlueStrikersStart2-ShootPark", group = "Auto")
+public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
 
-    public static boolean IS_RED_ALLIANCE = true; // which alliance's AprilTags count as detected (true = red tags, false = blue)
+    public static double TAG_TIMEOUT_SEC = 8.0;   // give up looking for an AprilTag after this long and run the fallback sequence
+    public static double FALLBACK_BACK_IN = 120.0; // fallback: move back
+    public static double FALLBACK_TURN_ANTICLOCKWISE_DEG = 180.0; // fallback: anticlockwise turn after moving back
+    public static double FALLBACK_WAIT_SEC = 3.0;  // fallback: wait before opening the gate
+    public static double FALLBACK_GATE_OPEN_SEC = 3.0; // fallback: gate open, shooting
+    public static double FALLBACK_TURN_CLOCKWISE_DEG = 90.0; // fallback: clockwise turn after shooting
+    public static double FALLBACK_MOVE_IN = 24.0;  // fallback: forward move after the clockwise turn
+    public static double FALLBACK_SECOND_TURN_CLOCKWISE_DEG = 90.0; // fallback: clockwise turn after that move
+    public static double FALLBACK_SECOND_MOVE_IN = 100.0; // fallback: last forward move
     public static double FLYWHEEL_RPM = 2700.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 2.0;     // gate open, shooting
@@ -82,18 +90,26 @@ public class AutoStrikersStart2ShootPark extends LinearOpMode {
 
         double flywheelRPM = FLYWHEEL_RPM;
 
-        // Step 1: wait until an AprilTag is detected before starting the sequence.
-        while (opModeIsActive()) {
-            vision.update(IS_RED_ALLIANCE);
-            boolean tagDetected = vision.isTargetVisible();
-            telemetry.addData("AprilTag", tagDetected ? "DETECTED - starting" : "NOT DETECTED - waiting");
+        // Step 1: look for an AprilTag for up to TAG_TIMEOUT_SEC. If none is found, run the fallback sequence.
+        boolean tagFound = false;
+        ElapsedTime tagTimer = new ElapsedTime();
+        while (opModeIsActive() && tagTimer.seconds() < TAG_TIMEOUT_SEC) {
+            vision.update(false); // BLUE alliance AprilTags only (red tags are ignored)
+            tagFound = vision.isTargetVisible();
+            telemetry.addData("AprilTag", tagFound ? "DETECTED - starting" : "NOT DETECTED - waiting");
+            telemetry.addData("Time", "%.1f / %.1f s", tagTimer.seconds(), TAG_TIMEOUT_SEC);
             telemetry.addData("Tags seen", vision.getTagsSeenSummary());
             telemetry.update();
-            if (tagDetected) break;
+            if (tagFound) break;
             sleep(20);
         }
         vision.stop(); // done with the camera
         if (!opModeIsActive()) return;
+
+        if (!tagFound) {
+            runFallbackSequence(drive, intake, gate, flywheelRPM);
+            return;
+        }
 
         // Gate is closed. Start intake and flywheel, wait.
         intake.setPower(StrikersConfig.INTAKE_POWER);
@@ -158,6 +174,93 @@ public class AutoStrikersStart2ShootPark extends LinearOpMode {
         drive.setDrivePowers(new PoseVelocity2d(new Vector2d(0, 0), 0));
         telemetry.addData("Status", "Done - everything stopped");
         telemetry.update();
+    }
+
+    /**
+     * Fallback when no AprilTag is found within TAG_TIMEOUT_SEC.
+     * Gate closed -> intake and flywheel on -> back up -> turn anticlockwise -> wait -> gate open -> wait
+     * -> turn clockwise -> gate closed -> move forward -> turn clockwise -> move forward. Intake and flywheel keep running to the end.
+     */
+    private void runFallbackSequence(MecanumDrive drive, DcMotorEx intake, Servo gate, double flywheelRPM) {
+        // Keep gate closed. Start intake and flywheel.
+        gate.setPosition(StrikersConfig.CLOSED_POSITION);
+        intake.setPower(StrikersConfig.INTAKE_POWER);
+
+        // Move back.
+        if (opModeIsActive()) {
+            Pose2d here = drive.localizer.getPose();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .lineToX(here.position.x - FALLBACK_BACK_IN)
+                            .build());
+        }
+
+        // Turn anticlockwise (Road Runner counterclockwise is positive).
+        if (opModeIsActive()) {
+            runWithFlywheel(
+                    drive.actionBuilder(drive.localizer.getPose())
+                            .turn(Math.toRadians(FALLBACK_TURN_ANTICLOCKWISE_DEG))
+                            .build());
+        }
+
+        // Wait with the flywheel running, then open the gate and wait (shooting).
+        holdFlywheel(flywheelRPM, FALLBACK_WAIT_SEC, "Fallback: waiting");
+        if (opModeIsActive()) {
+            gate.setPosition(StrikersConfig.OPEN_POSITION);
+        }
+        holdFlywheel(flywheelRPM, FALLBACK_GATE_OPEN_SEC, "Fallback: gate open");
+
+        // Turn clockwise (angle negated).
+        if (opModeIsActive()) {
+            runWithFlywheel(
+                    drive.actionBuilder(drive.localizer.getPose())
+                            .turn(-Math.toRadians(FALLBACK_TURN_CLOCKWISE_DEG))
+                            .build());
+        }
+
+        // Close the gate before the final move.
+        gate.setPosition(StrikersConfig.CLOSED_POSITION);
+
+        // Move forward along the robot's current heading.
+        if (opModeIsActive()) {
+            Pose2d here = drive.localizer.getPose();
+            double heading = here.heading.toDouble();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .strafeTo(new Vector2d(
+                                    here.position.x + FALLBACK_MOVE_IN * Math.cos(heading),
+                                    here.position.y + FALLBACK_MOVE_IN * Math.sin(heading)))
+                            .build());
+        }
+
+        // Turn clockwise again (angle negated).
+        if (opModeIsActive()) {
+            runWithFlywheel(
+                    drive.actionBuilder(drive.localizer.getPose())
+                            .turn(-Math.toRadians(FALLBACK_SECOND_TURN_CLOCKWISE_DEG))
+                            .build());
+        }
+
+        // Move forward along the robot's current heading.
+        if (opModeIsActive()) {
+            Pose2d here = drive.localizer.getPose();
+            double heading = here.heading.toDouble();
+            runWithFlywheel(
+                    drive.actionBuilder(here)
+                            .strafeTo(new Vector2d(
+                                    here.position.x + FALLBACK_SECOND_MOVE_IN * Math.cos(heading),
+                                    here.position.y + FALLBACK_SECOND_MOVE_IN * Math.sin(heading)))
+                            .build());
+        }
+
+        // Intake and flywheel keep running until the period ends.
+        while (opModeIsActive()) {
+            double rpm1 = updateFlywheel(flywheelRPM);
+            telemetry.addData("Status", "Fallback done - intake and flywheel running");
+            telemetry.addData("Flywheel RPM", "target %.0f | measured %.0f", flywheelRPM, rpm1);
+            telemetry.update();
+            sleep(20);
+        }
     }
 
     /** Like Actions.runBlocking, but keeps the flywheel control loop running while the action runs. */
