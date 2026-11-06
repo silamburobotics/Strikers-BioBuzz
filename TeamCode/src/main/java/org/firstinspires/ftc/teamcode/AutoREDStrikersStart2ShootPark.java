@@ -32,7 +32,7 @@ public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
     public static double FALLBACK_BACK_IN = 106.0;  // fallback: move back
     public static double FALLBACK_TURN_ANTICLOCKWISE_DEG = 180.0; // fallback: anticlockwise turn after moving back
     public static double FALLBACK_WAIT_SEC = 3.0;  // fallback: wait (shooting) with the gate already open
-    public static double FALLBACK_SECOND_MOVE_IN = 90.0;  // fallback: last forward move
+    public static double FALLBACK_SECOND_MOVE_IN = 90.0;  // fallback: second move back (after the gate closes)
     public static double FALLBACK_SHIFT_RIGHT_IN = 60.0; // fallback: sideways shift to the right after the last forward move
     public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
@@ -241,7 +241,7 @@ public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
     /**
      * Fallback when no AprilTag is found within TAG_TIMEOUT_SEC.
      * Flywheel on (gate stays open, intake off) -> back up -> turn anticlockwise -> intake on -> wait (shooting)
-     * -> gate closed -> move forward -> shift right. Intake and flywheel keep running to the end.
+     * -> gate closed -> move back -> shift right. Intake and flywheel keep running to the end.
      */
     private void runFallbackSequence(MecanumDrive drive, DcMotorEx intake, Servo gate, double flywheelRPM) {
         // Gate stays open (as set at INIT). Intake stays off. Flywheel ON.
@@ -273,15 +273,15 @@ public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
         // Close the gate before the final move.
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
 
-        // Move forward along the robot's current heading.
+        // Move back along the robot's current heading (opposite of forward).
         if (opModeIsActive()) {
             Pose2d here = drive.localizer.getPose();
             double heading = here.heading.toDouble();
             runWithFlywheel(
                     drive.actionBuilder(here)
                             .strafeTo(new Vector2d(
-                                    here.position.x + FALLBACK_SECOND_MOVE_IN * Math.cos(heading),
-                                    here.position.y + FALLBACK_SECOND_MOVE_IN * Math.sin(heading)))
+                                    here.position.x - FALLBACK_SECOND_MOVE_IN * Math.cos(heading),
+                                    here.position.y - FALLBACK_SECOND_MOVE_IN * Math.sin(heading)))
                             .build());
         }
 
