@@ -47,9 +47,9 @@ public class LimelightShooterSubsystem {
     public static double LIMELIGHT_MOUNT_ANGLE_DEG = 45.0;     // 45 degree upward camera mounting pitch angle
     public static int DESIRED_TAG_ID = -1;                 // -1 targets any AprilTag
 
-    public static double TURRET_AUTO_AIM_GAIN = 1.0;       // 1.0 = direct 1:1 target angle calculation
+    public static double TURRET_AUTO_AIM_GAIN = 0.35;      // Damped gain (0.35) to eliminate momentum overshooting/oscillation
     public static double TURRET_AIM_OFFSET_DEG = 0.0;      // Horizontal offset angle (in degrees) from AprilTag center to target basket
-    public static double AIM_DEADBAND_DEG = 0.75;          // Deadband tolerance to prevent hunting/oscillations
+    public static double AIM_DEADBAND_DEG = 1.5;           // Deadband tolerance (1.5°) to prevent hunting/jitter
     public static double TURRET_MIN_ANGLE_DEG = -90.0;
     public static double TURRET_MAX_ANGLE_DEG = 90.0;
 

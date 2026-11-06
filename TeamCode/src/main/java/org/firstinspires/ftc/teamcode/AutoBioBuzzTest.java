@@ -27,7 +27,7 @@ import com.qualcomm.robotcore.util.Range;
 @Autonomous(name = "AutoBioBuzzTest", group = "Auto")
 public class AutoBioBuzzTest extends LinearOpMode {
 
-    public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
+    public static double FLYWHEEL_RPM = 2500.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 2.0;     // gate open, shooting
     public static double SECOND_SHOT_SEC = 3.0;   // gate open, second shot (after the turn)
@@ -161,7 +161,7 @@ public class AutoBioBuzzTest extends LinearOpMode {
                             .build());
         }
 
-        // Turn clockwise 90. In Road Runner counterclockwise is positive, so the angle is negated.
+        // Turn clockwise. In Road Runner counterclockwise is positive, so the angle is negated.
         if (opModeIsActive()) {
             runWithFlywheel(
                     drive.actionBuilder(drive.localizer.getPose())

@@ -138,7 +138,6 @@ public class BioBuzzCentricRedWarriors extends LinearOpMode {
 
         boolean lastIntakeAState = false;
         boolean lastIntakeBState = false;
-        boolean lastIntakeLBState = false;
         boolean lastShifterAState = false;
         boolean lastShooterYState = false;
         boolean lastAutoAimLBState = false;
@@ -190,11 +189,8 @@ public class BioBuzzCentricRedWarriors extends LinearOpMode {
                 lastIntakePower = intakePower;
             }
 
-            // --- Synchronized Dual Intake Lift Servos Control (Gamepad 1 - Left Bumper: Toggle UP / DOWN) ---
-            if (gamepad1.left_bumper && !lastIntakeLBState) {
-                isIntakeLiftUp = !isIntakeLiftUp;
-            }
-            lastIntakeLBState = gamepad1.left_bumper;
+            // --- Synchronized Dual Intake Lift Servos Control (Gamepad 1 - Left Bumper: hold = DOWN, release = UP) ---
+            isIntakeLiftUp = !gamepad1.left_bumper; // Hold left bumper = arms DOWN, release = arms UP
 
             double targetLeftLiftPos = isIntakeLiftUp ? WarriorsConfig.INTAKE_LIFT_UP_POS : WarriorsConfig.INTAKE_LIFT_DOWN_POS;
             double targetRightLiftPos = Range.clip((1.0 - targetLeftLiftPos) + WarriorsConfig.RIGHT_SERVO_TRIM_OFFSET, 0.0, 1.0);
