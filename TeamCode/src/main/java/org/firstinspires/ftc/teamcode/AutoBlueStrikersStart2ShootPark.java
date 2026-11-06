@@ -32,7 +32,6 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
     public static double FALLBACK_BACK_IN = 106.0;  // fallback: move back
     public static double FALLBACK_TURN_ANTICLOCKWISE_DEG = 180.0; // fallback: anticlockwise turn after moving back
     public static double FALLBACK_WAIT_SEC = 3.0;  // fallback: wait (shooting) with the gate already open
-    public static double FALLBACK_TURN_CLOCKWISE_DEG = 180.0; // fallback: clockwise turn after shooting
     public static double FALLBACK_SECOND_MOVE_IN = 90.0;  // fallback: last forward move
     public static double FALLBACK_SHIFT_RIGHT_IN = 60.0; // fallback: sideways shift to the right after the last forward move
     public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
@@ -242,7 +241,7 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
     /**
      * Fallback when no AprilTag is found within TAG_TIMEOUT_SEC.
      * Flywheel on (gate stays open, intake off) -> back up -> turn anticlockwise -> intake on -> wait (shooting)
-     * -> turn clockwise -> gate closed -> move forward -> shift right. Intake and flywheel keep running to the end.
+     * -> gate closed -> move forward -> shift right. Intake and flywheel keep running to the end.
      */
     private void runFallbackSequence(MecanumDrive drive, DcMotorEx intake, Servo gate, double flywheelRPM) {
         // Gate stays open (as set at INIT). Intake stays off. Flywheel ON.
@@ -270,14 +269,6 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
 
         // Wait with the flywheel running (the gate is already open, so this is the shooting time).
         holdFlywheel(flywheelRPM, FALLBACK_WAIT_SEC, "Fallback: shooting (gate already open)");
-
-        // Turn clockwise (angle negated).
-        if (opModeIsActive()) {
-            runWithFlywheel(
-                    drive.actionBuilder(drive.localizer.getPose())
-                            .turn(-Math.toRadians(FALLBACK_TURN_CLOCKWISE_DEG))
-                            .build());
-        }
 
         // Close the gate before the final move.
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
