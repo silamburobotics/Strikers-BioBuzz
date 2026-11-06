@@ -38,8 +38,9 @@ public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
     public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 3.0;     // gate open, shooting
-    public static double SHAKE_IN = 1.0;          // shake distance: back this far, then forward this far
-    public static int SHAKE_COUNT = 2;            // number of back-and-forward shakes at the far point
+    public static double SHAKE_IN = 1.0;          // shake distance: back this far, then forward this far (done twice, with the lift wiggle in between)
+    public static double LIFT_WIGGLE = 0.02;      // right lift wiggle size during the shake (up by this, then back down)
+    public static double LIFT_WIGGLE_MS = 200.0;  // time to let the servo move at each end of the wiggle
     public static double A_EARLY_BACK_IN = 14.0;   // move back after the first shot (replaces the earlier 10 in + 4 in), before the shift left
     public static double A_SHIFT_LEFT_IN = 14.0;  // sideways shift to the left after the shot
     public static double A_SECOND_MOVE_IN = 11.0;  // forward move after the shift left, then shake again
@@ -176,8 +177,8 @@ public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
                             .build());
         }
 
-        // Shake again.
-        shake(drive);
+        // Shake: 1 in back and forward, right lift up 0.02 then down 0.02, then 1 in back and forward again.
+        shakeWithLiftWiggle(drive, intakeLiftRight, flywheelRPM);
 
         // Move back along the robot's current heading (opposite of forward).
         if (opModeIsActive()) {
@@ -315,21 +316,39 @@ public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
         }
     }
 
-    /** Shake effect: SHAKE_IN back, then SHAKE_IN forward, repeated SHAKE_COUNT times (along the field X axis). */
-    private void shake(MecanumDrive drive) {
-        for (int i = 0; i < SHAKE_COUNT && opModeIsActive(); i++) {
-            Pose2d here = drive.localizer.getPose();
-            runWithFlywheel(
-                    drive.actionBuilder(here)
-                            .lineToX(here.position.x - SHAKE_IN)
-                            .build());
-            if (!opModeIsActive()) break;
-            Pose2d back = drive.localizer.getPose();
-            runWithFlywheel(
-                    drive.actionBuilder(back)
-                            .lineToX(back.position.x + SHAKE_IN)
-                            .build());
+    /** One shake: SHAKE_IN back, then SHAKE_IN forward (along the field X axis). */
+    private void shakeOnce(MecanumDrive drive) {
+        if (!opModeIsActive()) return;
+        Pose2d here = drive.localizer.getPose();
+        runWithFlywheel(
+                drive.actionBuilder(here)
+                        .lineToX(here.position.x - SHAKE_IN)
+                        .build());
+        if (!opModeIsActive()) return;
+        Pose2d back = drive.localizer.getPose();
+        runWithFlywheel(
+                drive.actionBuilder(back)
+                        .lineToX(back.position.x + SHAKE_IN)
+                        .build());
+    }
+
+    /**
+     * Shake, then move the right lift up by LIFT_WIGGLE and back down by LIFT_WIGGLE, then shake again.
+     * "Up" is toward INTAKE_LIFT_RIGHT_UP_POS from the current DOWN position.
+     */
+    private void shakeWithLiftWiggle(MecanumDrive drive, Servo intakeLiftRight, double flywheelRPM) {
+        shakeOnce(drive);
+
+        if (intakeLiftRight != null && opModeIsActive()) {
+            double down = StrikersConfig.INTAKE_LIFT_RIGHT_DOWN_POS;
+            double upDirection = StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS >= down ? 1.0 : -1.0;
+            intakeLiftRight.setPosition(Range.clip(down + upDirection * LIFT_WIGGLE, 0.0, 1.0)); // up by 0.02
+            holdFlywheel(flywheelRPM, LIFT_WIGGLE_MS / 1000.0, "Lift wiggle up");
+            intakeLiftRight.setPosition(down); // down by 0.02 (back to the DOWN position)
+            holdFlywheel(flywheelRPM, LIFT_WIGGLE_MS / 1000.0, "Lift wiggle down");
         }
+
+        shakeOnce(drive);
     }
 
     /** Opens the gate with a kick: goes to GATE_KICK_POSITION for GATE_KICK_MS, then settles at OPEN_POSITION. */
