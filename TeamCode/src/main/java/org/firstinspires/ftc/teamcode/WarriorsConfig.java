@@ -26,7 +26,8 @@ public class WarriorsConfig {
     public static String INTAKE_LIFT_RIGHT_NAME = "intakeLiftRight";
     public static double INTAKE_LIFT_UP_POS = 0.40;       // UP height position
     public static double INTAKE_LIFT_DOWN_POS = 0.80;     // DOWN height position
-    public static double RIGHT_SERVO_TRIM_OFFSET = 0.0;   // Trim offset for right servo
+    public static double INTAKE_LIFT_RIGHT_UP_POS = 0.85;   // Right lift servo UP position (used directly, not mirrored)
+    public static double INTAKE_LIFT_RIGHT_DOWN_POS = 0.35; // Right lift servo DOWN position (used directly, not mirrored)
 
     // --- Axon Gate & Shifter Servos ---
     public static String GATE_SERVO = "gateServo";

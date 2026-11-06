@@ -88,7 +88,7 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
         // Set initial intake lift position to UP by default
         isIntakeLiftUp = true;
         double initLeftPos = StrikersConfig.INTAKE_LIFT_UP_POS;
-        double initRightPos = Range.clip((1.0 - initLeftPos) + StrikersConfig.RIGHT_SERVO_TRIM_OFFSET, 0.0, 1.0);
+        double initRightPos = StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS;
         if (intakeLiftLeft != null) intakeLiftLeft.setPosition(initLeftPos);
         if (intakeLiftRight != null) intakeLiftRight.setPosition(initRightPos);
 
@@ -198,7 +198,7 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
             isIntakeLiftUp = !gamepad1.left_bumper; // Hold left bumper = arms DOWN, release = arms UP
 
             double targetLeftLiftPos = isIntakeLiftUp ? StrikersConfig.INTAKE_LIFT_UP_POS : StrikersConfig.INTAKE_LIFT_DOWN_POS;
-            double targetRightLiftPos = Range.clip((1.0 - targetLeftLiftPos) + StrikersConfig.RIGHT_SERVO_TRIM_OFFSET, 0.0, 1.0);
+            double targetRightLiftPos = isIntakeLiftUp ? StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS : StrikersConfig.INTAKE_LIFT_RIGHT_DOWN_POS;
 
             if (intakeLiftLeft != null) {
                 intakeLiftLeft.setPosition(targetLeftLiftPos);

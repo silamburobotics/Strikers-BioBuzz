@@ -206,7 +206,7 @@ public class RED1TipRoadRunner extends LinearOpMode {
             Servo intakeLiftLeft = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_LEFT_NAME);
             Servo intakeLiftRight = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_RIGHT_NAME);
             double initLeftPos = StrikersConfig.INTAKE_LIFT_DOWN_POS;
-            double initRightPos = Math.max(0.0, Math.min(1.0, (1.0 - initLeftPos) + StrikersConfig.RIGHT_SERVO_TRIM_OFFSET));
+            double initRightPos = StrikersConfig.INTAKE_LIFT_RIGHT_DOWN_POS;
             intakeLiftLeft.setPosition(initLeftPos);
             intakeLiftRight.setPosition(initRightPos);
         } catch (Exception ignored) {}

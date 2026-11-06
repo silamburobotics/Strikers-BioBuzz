@@ -88,7 +88,7 @@ public class BioBuzzCentricRedWarriors extends LinearOpMode {
         // Set initial intake lift position to UP by default
         isIntakeLiftUp = true;
         double initLeftPos = WarriorsConfig.INTAKE_LIFT_UP_POS;
-        double initRightPos = Range.clip((1.0 - initLeftPos) + WarriorsConfig.RIGHT_SERVO_TRIM_OFFSET, 0.0, 1.0);
+        double initRightPos = WarriorsConfig.INTAKE_LIFT_RIGHT_UP_POS;
         if (intakeLiftLeft != null) intakeLiftLeft.setPosition(initLeftPos);
         if (intakeLiftRight != null) intakeLiftRight.setPosition(initRightPos);
 
@@ -193,7 +193,7 @@ public class BioBuzzCentricRedWarriors extends LinearOpMode {
             isIntakeLiftUp = !gamepad1.left_bumper; // Hold left bumper = arms DOWN, release = arms UP
 
             double targetLeftLiftPos = isIntakeLiftUp ? WarriorsConfig.INTAKE_LIFT_UP_POS : WarriorsConfig.INTAKE_LIFT_DOWN_POS;
-            double targetRightLiftPos = Range.clip((1.0 - targetLeftLiftPos) + WarriorsConfig.RIGHT_SERVO_TRIM_OFFSET, 0.0, 1.0);
+            double targetRightLiftPos = isIntakeLiftUp ? WarriorsConfig.INTAKE_LIFT_RIGHT_UP_POS : WarriorsConfig.INTAKE_LIFT_RIGHT_DOWN_POS;
 
             if (intakeLiftLeft != null) {
                 intakeLiftLeft.setPosition(targetLeftLiftPos);
