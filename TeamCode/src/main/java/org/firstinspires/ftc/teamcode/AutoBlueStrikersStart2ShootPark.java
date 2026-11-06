@@ -32,20 +32,18 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
     public static double FALLBACK_BACK_IN = 106.0;  // fallback: move back
     public static double FALLBACK_TURN_ANTICLOCKWISE_DEG = 180.0; // fallback: anticlockwise turn after moving back
     public static double FALLBACK_WAIT_SEC = 3.0;  // fallback: wait (shooting) with the gate already open
-    public static double FALLBACK_TURN_CLOCKWISE_DEG = 90.0; // fallback: clockwise turn after shooting
+    public static double FALLBACK_TURN_CLOCKWISE_DEG = 180.0; // fallback: clockwise turn after shooting
     public static double FALLBACK_MOVE_IN = 24.0;  // fallback: forward move after the clockwise turn
-    public static double FALLBACK_SECOND_TURN_CLOCKWISE_DEG = 90.0; // fallback: clockwise turn after that move
-    public static double FALLBACK_SECOND_MOVE_IN = 80.0;  // fallback: last forward move
-    public static double FALLBACK_SHIFT_LEFT_IN = 20.0; // fallback: sideways shift to the left after the last forward move
+    public static double FALLBACK_SECOND_MOVE_IN = 90.0;  // fallback: last forward move
+    public static double FALLBACK_SHIFT_LEFT_IN = 60.0; // fallback: sideways shift to the left after the last forward move
     public static double FLYWHEEL_RPM = 2700.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 3.0;     // gate open, shooting
-    public static double DRIVE_DISTANCE_IN = 10.0; // drive back right after intake and flywheel start
     public static double SHAKE_IN = 1.0;          // shake distance: back this far, then forward this far
     public static int SHAKE_COUNT = 2;            // number of back-and-forward shakes at the far point
-    public static double A_EARLY_BACK_IN = 4.0;   // move back after the first shot, before the shift left
+    public static double A_EARLY_BACK_IN = 14.0;   // move back after the first shot (replaces the earlier 10 in + 4 in), before the shift left
     public static double A_SHIFT_LEFT_IN = 14.0;  // sideways shift to the left after the shot
-    public static double A_SECOND_MOVE_IN = 8.0;  // forward move after the shift left, then shake again
+    public static double A_SECOND_MOVE_IN = 11.0;  // forward move after the shift left, then shake again
     public static double A_BACK_IN = 8.0;        // move back after the second shake
     public static double A_SHIFT_RIGHT_IN = 14.0; // sideways shift to the right after moving back
     public static double SECOND_SHOT_SEC = 3.0;   // gate open, second shot
@@ -127,15 +125,6 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
 
         // Gate is already open. Flywheel ON (the flywheel control runs in every loop below). Intake starts after the spin-up wait.
         updateFlywheel(flywheelRPM);
-
-        // Drive back (flywheel keeps spinning up while driving).
-        if (opModeIsActive()) {
-            Pose2d here = drive.localizer.getPose();
-            runWithFlywheel(
-                    drive.actionBuilder(here)
-                            .lineToX(here.position.x - DRIVE_DISTANCE_IN)
-                            .build());
-        }
 
         // Wait for the flywheel to spin up.
         holdFlywheel(flywheelRPM, SPINUP_WAIT_SEC, "Spinning up");
@@ -253,7 +242,7 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
     /**
      * Fallback when no AprilTag is found within TAG_TIMEOUT_SEC.
      * Flywheel on (gate stays open, intake off) -> back up -> turn anticlockwise -> intake on -> wait (shooting)
-     * -> turn clockwise -> gate closed -> move forward -> turn clockwise -> move forward. Intake and flywheel keep running to the end.
+     * -> turn clockwise -> gate closed -> move forward -> move forward -> shift left. Intake and flywheel keep running to the end.
      */
     private void runFallbackSequence(MecanumDrive drive, DcMotorEx intake, Servo gate, double flywheelRPM) {
         // Gate stays open (as set at INIT). Intake stays off. Flywheel ON.
@@ -302,14 +291,6 @@ public class AutoBlueStrikersStart2ShootPark extends LinearOpMode {
                             .strafeTo(new Vector2d(
                                     here.position.x + FALLBACK_MOVE_IN * Math.cos(heading),
                                     here.position.y + FALLBACK_MOVE_IN * Math.sin(heading)))
-                            .build());
-        }
-
-        // Turn clockwise again (angle negated).
-        if (opModeIsActive()) {
-            runWithFlywheel(
-                    drive.actionBuilder(drive.localizer.getPose())
-                            .turn(-Math.toRadians(FALLBACK_SECOND_TURN_CLOCKWISE_DEG))
                             .build());
         }
 
