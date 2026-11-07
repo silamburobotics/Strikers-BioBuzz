@@ -52,6 +52,14 @@ public class Auto1BLUEWarriorsPark extends LinearOpMode {
         gate.setPosition(WarriorsConfig.OPEN_POSITION);
         shifter.setPosition(WarriorsConfig.SHIFTER_CLOSED_POSITION);
 
+        // Right intake lift servo: UP at INIT and stays UP for the whole auto. (skipped if it is not in the robot configuration)
+        try {
+            Servo intakeLiftRight = hardwareMap.get(Servo.class, WarriorsConfig.INTAKE_LIFT_RIGHT_NAME);
+            intakeLiftRight.setPosition(WarriorsConfig.INTAKE_LIFT_RIGHT_UP_POS);
+        } catch (Exception ignored) {
+            // no right lift servo configured
+        }
+
         // Flywheels
         shooter1 = hardwareMap.get(DcMotorEx.class, WarriorsConfig.MOTOR_1_NAME);
         shooter2 = hardwareMap.get(DcMotorEx.class, WarriorsConfig.MOTOR_2_NAME);
