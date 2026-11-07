@@ -37,12 +37,12 @@ public class Auto2BLUEWarriorsUnderHive extends LinearOpMode {
     public static double FLYWHEEL_RPM = 2900.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 3.0;     // gate open, shooting
-    public static double SHAKE_IN = 1.0;          // shake distance: back this far, then forward this far (done twice, with the lift wiggle in between)
+    public static double SHAKE_IN = 2.0;          // shake distance: right this far, then left this far (done twice, with the lift wiggle in between)
     public static double LIFT_WIGGLE = 0.02;      // right lift wiggle size during the shake (up by this, then back down)
     public static double LIFT_WIGGLE_MS = 200.0;  // time to let the servo move at each end of the wiggle
     public static double A_EARLY_BACK_IN = 14.0;   // move back after the first shot (replaces the earlier 10 in + 4 in), before the shift left
     public static double A_SHIFT_LEFT_IN = 12.0;  // sideways shift to the left after the shot
-    public static double A_SECOND_MOVE_IN = 11.0;  // forward move after the shift left, then shake again
+    public static double A_SECOND_MOVE_IN = 12.0;  // forward move after the shift left, then shake again
     public static double A_BACK_IN = 8.0;        // move back after the second shake
     public static double A_SHIFT_RIGHT_IN = 12.0; // sideways shift to the right after moving back
     public static double SECOND_SHOT_SEC = 3.0;   // gate open, second shot
@@ -177,7 +177,7 @@ public class Auto2BLUEWarriorsUnderHive extends LinearOpMode {
                             .build());
         }
 
-        // Shake: 1 in back and forward, right lift up 0.02 then down 0.02, then 1 in back and forward again.
+        // Shake: 2 in right and left, right lift up 0.02 then down 0.02, then 2 in right and left again.
         shakeWithLiftWiggle(drive, intakeLiftRight, flywheelRPM);
 
         // Move back along the robot's current heading (opposite of forward).
@@ -308,19 +308,22 @@ public class Auto2BLUEWarriorsUnderHive extends LinearOpMode {
         }
     }
 
-    /** One shake: SHAKE_IN back, then SHAKE_IN forward (along the field X axis). */
+    /** One shake: SHAKE_IN to the right, then SHAKE_IN to the left (sideways, heading held). */
     private void shakeOnce(MecanumDrive drive) {
+        shiftSideways(drive, -SHAKE_IN); // right
+        shiftSideways(drive, SHAKE_IN);  // left
+    }
+
+    /** Sideways move with the heading held: positive = LEFT, negative = RIGHT. Left of the heading is (-sin, cos). */
+    private void shiftSideways(MecanumDrive drive, double leftInches) {
         if (!opModeIsActive()) return;
         Pose2d here = drive.localizer.getPose();
+        double heading = here.heading.toDouble();
         runWithFlywheel(
                 drive.actionBuilder(here)
-                        .lineToX(here.position.x - SHAKE_IN)
-                        .build());
-        if (!opModeIsActive()) return;
-        Pose2d back = drive.localizer.getPose();
-        runWithFlywheel(
-                drive.actionBuilder(back)
-                        .lineToX(back.position.x + SHAKE_IN)
+                        .strafeTo(new Vector2d(
+                                here.position.x - leftInches * Math.sin(heading),
+                                here.position.y + leftInches * Math.cos(heading)))
                         .build());
     }
 
