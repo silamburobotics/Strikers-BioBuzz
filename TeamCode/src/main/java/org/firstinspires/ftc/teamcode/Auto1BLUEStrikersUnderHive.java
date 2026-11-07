@@ -35,7 +35,7 @@ public class Auto1BLUEStrikersUnderHive extends LinearOpMode {
     public static double START_TURN_CLOCKWISE_DEG = 89.0;      // turn clockwise after the gate closes
     public static double LIFT_MOVE_FORWARD_IN = 44.0;          // forward move with the right lift DOWN
     public static double LIFT_MOVE_BACK_IN = 44.0;             // come back with the right lift UP
-    public static double END_TURN_ANTICLOCKWISE_DEG = 88.0;    // turn back anticlockwise
+    public static double END_TURN_ANTICLOCKWISE_DEG = 92.0;    // turn back anticlockwise
     public static double A_WAIT_SEC = 3.0;                     // sequence A: wait after opening the gate
     public static double A_BACK_IN = 100.0;                    // sequence A: drive back
     public static double A_SHIFT_RIGHT_IN = 55.0;              // sequence A: final sideways shift to the right
