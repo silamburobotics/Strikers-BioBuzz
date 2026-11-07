@@ -28,13 +28,13 @@ import com.qualcomm.robotcore.util.Range;
 public class Auto2REDStrikersPark extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 15.0;  // look for a red AprilTag for up to this long
-    public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
+    public static double FLYWHEEL_RPM = 2820.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
     public static double FOUND_BACK_IN = 12.0;    // tag found: move back
-    public static double FOUND_LEFT_IN = 54.0;    // tag found: move left
+    public static double FOUND_LEFT_IN = 58.0;    // tag found: move left
     public static double NOT_FOUND_BACK_IN = 12.0;   // tag not found: move back
-    public static double NOT_FOUND_LEFT_IN = 54.0;   // tag not found: move left
+    public static double NOT_FOUND_LEFT_IN = 58.0;   // tag not found: move left
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;

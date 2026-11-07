@@ -34,7 +34,7 @@ public class Auto2REDStrikersUnderHive extends LinearOpMode {
     public static double FALLBACK_WAIT_SEC = 3.0;  // fallback: wait (shooting) with the gate already open
     public static double FALLBACK_SECOND_MOVE_IN = 100.0;  // fallback: second move back (after the gate closes)
     public static double FALLBACK_SHIFT_RIGHT_IN = 45.0; // fallback: sideways shift to the right after the last forward move
-    public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
+    public static double FLYWHEEL_RPM = 2820.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;  // flywheel on, gate closed
     public static double GATE_OPEN_SEC = 3.0;     // gate open, shooting
     public static double SHAKE_IN = 1.0;          // shake distance: back this far, then forward this far (done twice, with the lift wiggle in between)

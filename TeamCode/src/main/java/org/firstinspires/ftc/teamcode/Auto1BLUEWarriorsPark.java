@@ -26,7 +26,7 @@ import com.qualcomm.robotcore.util.Range;
 @Autonomous(name = "1BLUEWarriorsPark", group = "Auto")
 public class Auto1BLUEWarriorsPark extends LinearOpMode {
 
-    public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
+    public static double FLYWHEEL_RPM = 2820.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
     public static double FIRST_RIGHT_IN = 55.0;   // first sideways move to the right
