@@ -27,14 +27,14 @@ import com.qualcomm.robotcore.util.Range;
 @Autonomous(name = "2REDStrikersPark", group = "Auto")
 public class Auto2REDStrikersPark extends LinearOpMode {
 
-    public static double TAG_TIMEOUT_SEC = 20.0;  // look for a red AprilTag for up to this long
-    public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
+    public static double TAG_TIMEOUT_SEC = 15.0;  // look for a red AprilTag for up to this long
+    public static double FLYWHEEL_RPM = 2900.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
     public static double FOUND_BACK_IN = 12.0;    // tag found: move back
-    public static double FOUND_LEFT_IN = 54.0;    // tag found: move left
+    public static double FOUND_LEFT_IN = 58.0;    // tag found: move left
     public static double NOT_FOUND_BACK_IN = 12.0;   // tag not found: move back
-    public static double NOT_FOUND_LEFT_IN = 54.0;   // tag not found: move left
+    public static double NOT_FOUND_LEFT_IN = 58.0;   // tag not found: move left
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
@@ -54,6 +54,14 @@ public class Auto2REDStrikersPark extends LinearOpMode {
         Servo shifter = hardwareMap.get(Servo.class, StrikersConfig.SHIFTER_SERVO);
         gate.setPosition(StrikersConfig.OPEN_POSITION);
         shifter.setPosition(StrikersConfig.SHIFTER_CLOSED_POSITION);
+
+        // Right intake lift servo: UP at INIT and stays UP for the whole auto. (skipped if it is not in the robot configuration)
+        try {
+            Servo intakeLiftRight = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_RIGHT_NAME);
+            intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS);
+        } catch (Exception ignored) {
+            // no right lift servo configured
+        }
 
         // Flywheels
         shooter1 = hardwareMap.get(DcMotorEx.class, StrikersConfig.MOTOR_1_NAME);

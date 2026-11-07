@@ -27,8 +27,8 @@ import com.qualcomm.robotcore.util.Range;
 @Autonomous(name = "2REDWarriorsPark", group = "Auto")
 public class Auto2REDWarriorsPark extends LinearOpMode {
 
-    public static double TAG_TIMEOUT_SEC = 20.0;  // look for a red AprilTag for up to this long
-    public static double FLYWHEEL_RPM = 2800.0;   // auto shooter speed (teleop stays separate)
+    public static double TAG_TIMEOUT_SEC = 15.0;  // look for a red AprilTag for up to this long
+    public static double FLYWHEEL_RPM = 2820.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
     public static double FOUND_BACK_IN = 12.0;    // tag found: move back
@@ -54,6 +54,14 @@ public class Auto2REDWarriorsPark extends LinearOpMode {
         Servo shifter = hardwareMap.get(Servo.class, WarriorsConfig.SHIFTER_SERVO);
         gate.setPosition(WarriorsConfig.OPEN_POSITION);
         shifter.setPosition(WarriorsConfig.SHIFTER_CLOSED_POSITION);
+
+        // Right intake lift servo: UP at INIT and stays UP for the whole auto. (skipped if it is not in the robot configuration)
+        try {
+            Servo intakeLiftRight = hardwareMap.get(Servo.class, WarriorsConfig.INTAKE_LIFT_RIGHT_NAME);
+            intakeLiftRight.setPosition(WarriorsConfig.INTAKE_LIFT_RIGHT_UP_POS);
+        } catch (Exception ignored) {
+            // no right lift servo configured
+        }
 
         // Flywheels
         shooter1 = hardwareMap.get(DcMotorEx.class, WarriorsConfig.MOTOR_1_NAME);

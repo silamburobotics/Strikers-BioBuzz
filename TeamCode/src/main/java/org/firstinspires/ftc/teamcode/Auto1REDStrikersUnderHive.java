@@ -19,7 +19,7 @@ import com.qualcomm.robotcore.util.Range;
  * RED alliance, Start 1: shoot, then run Sequence A (red tag found) or Sequence B (no red tag).
  *
  * Shared steps: shooter on (gate already open, intake off) -> wait -> intake on, wait (shooting) -> gate closed
- *   -> turn clockwise -> right lift DOWN -> forward -> right lift UP -> back -> turn anticlockwise.
+ *   -> turn clockwise -> forward -> back -> turn anticlockwise (right lift stays UP).
  * Then look for a RED AprilTag for up to TAG_TIMEOUT_SEC (not at the start, where it would always be found).
  * A (tag found): open gate -> wait -> drive back -> shift right.
  * B (no tag):    drive back -> turn 180 -> open gate -> wait -> shift left.
@@ -29,13 +29,13 @@ import com.qualcomm.robotcore.util.Range;
 public class Auto1REDStrikersUnderHive extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 2.0;       // after the shared steps, look for a red AprilTag for this long; if none, run sequence B
-    public static double FLYWHEEL_RPM = 2800.0;       // auto shooter speed (teleop stays separate)
+    public static double FLYWHEEL_RPM = 2820.0;       // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;       // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;        // intake on, gate open: shooting
     public static double START_TURN_CLOCKWISE_DEG = 89.0;      // turn clockwise after the gate closes
-    public static double LIFT_MOVE_FORWARD_IN = 44.0;          // forward move with the right lift DOWN
-    public static double LIFT_MOVE_BACK_IN = 44.0;             // come back with the right lift UP
-    public static double END_TURN_ANTICLOCKWISE_DEG = 92.0;    // turn back anticlockwise
+    public static double LIFT_MOVE_FORWARD_IN = 50.0;          // forward move after the turn
+    public static double LIFT_MOVE_BACK_IN = 48.0;             // come back the same distance
+    public static double END_TURN_ANTICLOCKWISE_DEG = 94.0;    // turn back anticlockwise
     public static double A_WAIT_SEC = 3.0;                     // sequence A: wait after opening the gate
     public static double A_BACK_IN = 100.0;                    // sequence A: drive back
     public static double A_SHIFT_RIGHT_IN = 55.0;              // sequence A: final sideways shift to the right
@@ -118,21 +118,13 @@ public class Auto1REDStrikersUnderHive extends LinearOpMode {
                             .build());
         }
 
-        // Step 6: right lift DOWN.
-        if (intakeLiftRight != null) {
-            intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_RIGHT_DOWN_POS);
-        }
-
-        // Step 7: move forward along the robot's current heading.
+        // Step 6: move forward along the robot's current heading (the right lift stays UP the whole time).
         moveAlongHeading(drive, LIFT_MOVE_FORWARD_IN);
 
-        // Step 8: right lift UP, then come back the same distance.
-        if (intakeLiftRight != null) {
-            intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS);
-        }
+        // Step 7: come back the same distance.
         moveAlongHeading(drive, -LIFT_MOVE_BACK_IN);
 
-        // Step 9: turn anticlockwise.
+        // Step 8: turn anticlockwise.
         if (opModeIsActive()) {
             runWithFlywheel(
                     drive.actionBuilder(drive.localizer.getPose())
@@ -140,7 +132,7 @@ public class Auto1REDStrikersUnderHive extends LinearOpMode {
                             .build());
         }
 
-        // Step 10: NOW look for a RED AprilTag for up to TAG_TIMEOUT_SEC (not at the start, since it would always be found then).
+        // Step 9: NOW look for a RED AprilTag for up to TAG_TIMEOUT_SEC (not at the start, since it would always be found then).
         // The flywheel keeps running while we look. Found -> sequence A, not found -> sequence B.
         boolean tagFound = false;
         ElapsedTime tagTimer = new ElapsedTime();
