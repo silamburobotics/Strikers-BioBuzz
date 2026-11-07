@@ -16,19 +16,16 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 /**
- * RED alliance, Start 1: shoot, then run Sequence A (red tag found) or Sequence B (no red tag).
+ * Start 1: shoot, then run the Around Hive sequence. No AprilTag check.
  *
- * Shared steps: shooter on (gate already open, intake off) -> wait -> intake on, wait (shooting) -> gate closed
- *   -> turn clockwise -> forward -> back -> turn anticlockwise (right lift stays UP).
- * Then look for a RED AprilTag for up to TAG_TIMEOUT_SEC (not at the start, where it would always be found).
- * A (tag found): open gate -> wait -> shift right -> drive back -> shift right.
- * B (no tag):    shift right -> drive back -> turn 180 -> shift right -> open gate -> wait -> shift left -> back -> shift left.
+ * Shooter on (gate already open, intake off) -> wait -> intake on, wait (shooting) -> gate closed
+ *   -> turn clockwise -> forward -> back -> turn anticlockwise (right lift stays UP)
+ *   -> open gate -> wait -> shift right -> drive back -> shift right.
  */
 @Config
 @Autonomous(name = "1AroundHive", group = "Auto")
 public class Auto1AroundHive extends LinearOpMode {
 
-    public static double TAG_TIMEOUT_SEC = 2.0;       // after the shared steps, look for a red AprilTag for this long; if none, run sequence B
     public static double FLYWHEEL_RPM = 2900.0;       // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;       // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;        // intake on, gate open: shooting
@@ -36,18 +33,10 @@ public class Auto1AroundHive extends LinearOpMode {
     public static double LIFT_MOVE_FORWARD_IN = 55.0;          // forward move after the turn
     public static double LIFT_MOVE_BACK_IN = 40.0;             // come back
     public static double END_TURN_ANTICLOCKWISE_DEG = 90.0;    // turn back anticlockwise
-    public static double A_WAIT_SEC = 3.0;                     // sequence A: wait after opening the gate
-    public static double A_BACK_IN = 85.0;                    // sequence A: drive back
+    public static double A_WAIT_SEC = 3.0;                     // wait after opening the gate
+    public static double A_BACK_IN = 80.0;                   // sequence A: drive back
     public static double A_SHIFT_RIGHT_IN = 40.0;              // sequence A: first sideways shift to the right (before driving back)
     public static double A_SECOND_SHIFT_RIGHT_IN = 24.0;       // sequence A: final sideways shift to the right
-    public static double B_FIRST_SHIFT_RIGHT_IN = 40.0;        // sequence B: sideways shift to the right before driving back
-    public static double B_SHIFT_RIGHT_IN = 40.0;              // sequence B: sideways shift to the right (after the turn)
-    public static double B_BACK_IN = 90.0;                    // sequence B: drive back
-    public static double B_TURN_ANTICLOCKWISE_DEG = 180.0;     // sequence B: turn after driving back
-    public static double B_WAIT_SEC = 3.0;                     // sequence B: wait after opening the gate
-    public static double B_SHIFT_LEFT_IN = 40.0;               // sequence B: first sideways shift to the left (after the wait)
-    public static double B_FINAL_BACK_IN = 15.0;               // sequence B: move back after the first left shift
-    public static double B_SECOND_SHIFT_LEFT_IN = 20.0;        // sequence B: final sideways shift to the left
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
@@ -88,17 +77,11 @@ public class Auto1AroundHive extends LinearOpMode {
         shooter2.setDirection(StrikersConfig.MOTOR_2_REVERSED
                 ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
 
-        // Vision (Limelight 3A or Logitech C270, whichever is connected)
-        LimelightShooterSubsystem vision = new LimelightShooterSubsystem(hardwareMap);
-
         telemetry.addData("Status", "Ready - RED Start 1 auto");
         telemetry.update();
 
         waitForStart();
-        if (isStopRequested()) {
-            vision.stop();
-            return;
-        }
+        if (isStopRequested()) return;
 
         double flywheelRPM = FLYWHEEL_RPM;
 
@@ -137,63 +120,19 @@ public class Auto1AroundHive extends LinearOpMode {
                             .build());
         }
 
-        // Step 9: NOW look for a RED AprilTag for up to TAG_TIMEOUT_SEC (not at the start, since it would always be found then).
-        // The flywheel keeps running while we look. Found -> sequence A, not found -> sequence B.
-        boolean tagFound = false;
-        ElapsedTime tagTimer = new ElapsedTime();
-        while (opModeIsActive() && tagTimer.seconds() < TAG_TIMEOUT_SEC) {
-            updateFlywheel(flywheelRPM);
-            vision.update(true); // RED alliance AprilTags only (blue tags are ignored)
-            tagFound = vision.isTargetVisible();
-            telemetry.addData("AprilTag", tagFound ? "DETECTED - sequence A" : "NOT DETECTED - looking");
-            telemetry.addData("Time", "%.1f / %.1f s", tagTimer.seconds(), TAG_TIMEOUT_SEC);
-            telemetry.addData("Tags seen", vision.getTagsSeenSummary());
-            telemetry.update();
-            if (tagFound) break;
-            sleep(20);
+        // Step 9: open gate (with the kick), wait, shift right, drive back, then shift right again.
+        if (opModeIsActive()) {
+            openGateWithKick(gate, flywheelRPM);
         }
-        vision.stop(); // done with the camera
-        if (!opModeIsActive()) return;
-
-        if (tagFound) {
-            // ---------- Sequence A: red tag found ----------
-            // Open gate (with the kick), wait, shift right, drive back, then shift right again.
-            if (opModeIsActive()) {
-                openGateWithKick(gate, flywheelRPM);
-            }
-            holdFlywheel(flywheelRPM, A_WAIT_SEC, "Sequence A: waiting (gate open)");
-            shiftSideways(drive, -A_SHIFT_RIGHT_IN);       // shift right
-            moveAlongHeading(drive, -A_BACK_IN);            // drive back
-            shiftSideways(drive, -A_SECOND_SHIFT_RIGHT_IN); // shift right again
-        } else {
-            // ---------- Sequence B: no red tag ----------
-            // Shift right, drive back, turn 180, shift right again, open gate (with the kick), wait, then shift left.
-            shiftSideways(drive, -B_FIRST_SHIFT_RIGHT_IN);  // shift right (before driving back)
-            moveAlongHeading(drive, -B_BACK_IN);            // drive back
-
-            if (opModeIsActive()) {
-                runWithFlywheel(
-                        drive.actionBuilder(drive.localizer.getPose())
-                                .turn(Math.toRadians(B_TURN_ANTICLOCKWISE_DEG))
-                                .build());
-            }
-
-            shiftSideways(drive, -B_SHIFT_RIGHT_IN);        // shift right (after the turn)
-
-            if (opModeIsActive()) {
-                openGateWithKick(gate, flywheelRPM);
-            }
-            holdFlywheel(flywheelRPM, B_WAIT_SEC, "Sequence B: waiting (gate open)");
-            shiftSideways(drive, B_SHIFT_LEFT_IN);          // shift left
-            moveAlongHeading(drive, -B_FINAL_BACK_IN);      // move back
-            shiftSideways(drive, B_SECOND_SHIFT_LEFT_IN);   // shift left again
-        }
+        holdFlywheel(flywheelRPM, A_WAIT_SEC, "Waiting (gate open)");
+        shiftSideways(drive, -A_SHIFT_RIGHT_IN);        // shift right
+        moveAlongHeading(drive, -A_BACK_IN);            // drive back
+        shiftSideways(drive, -A_SECOND_SHIFT_RIGHT_IN); // shift right again
 
         // Intake and flywheel keep running until the period ends.
         while (opModeIsActive()) {
             double rpm1 = updateFlywheel(flywheelRPM);
-            telemetry.addData("Status", tagFound ? "Sequence A done - intake and flywheel running"
-                    : "Sequence B done - intake and flywheel running");
+            telemetry.addData("Status", "Done - intake and flywheel running");
             telemetry.addData("Flywheel RPM", "target %.0f | measured %.0f", flywheelRPM, rpm1);
             telemetry.update();
             sleep(20);
