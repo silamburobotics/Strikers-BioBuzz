@@ -29,7 +29,7 @@ import com.qualcomm.robotcore.util.Range;
 public class Auto1BLUEStrikersUnderHive extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 2.0;       // after the shared steps, look for a blue AprilTag for this long; if none, run sequence B
-    public static double FLYWHEEL_RPM = 2820.0;       // auto shooter speed (teleop stays separate)
+    public static double FLYWHEEL_RPM = 2900.0;       // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;       // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;        // intake on, gate open: shooting
     public static double START_TURN_CLOCKWISE_DEG = 89.0;      // turn clockwise after the gate closes
