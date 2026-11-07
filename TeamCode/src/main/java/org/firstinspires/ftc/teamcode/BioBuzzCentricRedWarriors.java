@@ -264,9 +264,6 @@ public class BioBuzzCentricRedWarriors extends LinearOpMode {
 
             int targetTurretTicks = (int) Math.round(targetTurretAngle * ticksPerDegree);
             turret.setTargetPosition(targetTurretTicks);
-
-            double maxTurretVelocity = WarriorsConfig.TURRET_MAX_VELOCITY_DEG_PER_SEC * ticksPerDegree;
-            turret.setVelocity(maxTurretVelocity);
             turret.setPower(WarriorsConfig.TURRET_MAX_POWER);
 
             // --- Shooter Flywheel Control (Gamepad 2: Y = Toggle ON/OFF) ---
@@ -275,7 +272,7 @@ public class BioBuzzCentricRedWarriors extends LinearOpMode {
             }
             lastShooterYState = gamepad2.y;
 
-            shooter1.setDirection(DcMotorSimple.Direction.FORWARD);
+            shooter1.setDirection(WarriorsConfig.MOTOR_1_REVERSED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
             shooter2.setDirection(WarriorsConfig.MOTOR_2_REVERSED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
 
             // Dynamic distance-based flywheel RPM calculation
@@ -298,7 +295,7 @@ public class BioBuzzCentricRedWarriors extends LinearOpMode {
                 shooter1.setVelocity(targetTPS);
                 shooter2.setPower(shooter1.getPower());
             } else {
-                shooter1.setVelocity(0.0);
+                shooter1.setPower(0.0);
                 shooter2.setPower(0.0);
             }
 

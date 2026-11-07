@@ -50,8 +50,8 @@ public class StrikersConfig {
     // --- Flywheel Motors Configuration ---
     public static String MOTOR_1_NAME = "flyWheel1";
     public static String MOTOR_2_NAME = "flyWheel2";
-    public static double FLYWHEEL_OPEN_RPM = 2320.0;     // Manual RPM when shifter is OPEN / Nectar mode
-    public static double FLYWHEEL_CLOSED_RPM = 2150.0;   // Manual RPM when shifter is CLOSED / Pollen mode
+    public static double FLYWHEEL_OPEN_RPM = 2520.0;     // Manual RPM when shifter is OPEN / Nectar mode
+    public static double FLYWHEEL_CLOSED_RPM = 2350.0;   // Manual RPM when shifter is CLOSED / Pollen mode
     public static double TICKS_PER_REV = 28.0;         // GoBILDA 6000 RPM motor encoder resolution
     public static boolean MOTOR_2_REVERSED = true;     // Set true if motor 2 spins opposite to motor 1
     public static boolean FLYWHEEL_ENABLED = false;    // Toggle flywheel motors ON/OFF

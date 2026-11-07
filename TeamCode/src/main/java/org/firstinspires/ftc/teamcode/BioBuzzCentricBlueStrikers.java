@@ -303,7 +303,7 @@ public class BioBuzzCentricBlueStrikers extends LinearOpMode {
                 shooter1.setVelocity(targetTPS);
                 shooter2.setPower(shooter1.getPower());
             } else {
-                shooter1.setVelocity(0.0);
+                shooter1.setPower(0.0);
                 shooter2.setPower(0.0);
             }
 
