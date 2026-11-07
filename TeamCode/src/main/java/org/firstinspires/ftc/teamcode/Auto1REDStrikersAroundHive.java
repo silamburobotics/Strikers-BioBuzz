@@ -34,18 +34,18 @@ public class Auto1REDStrikersAroundHive extends LinearOpMode {
     public static double SHOOT_WAIT_SEC = 3.0;        // intake on, gate open: shooting
     public static double START_TURN_CLOCKWISE_DEG = 90.0;      // turn clockwise after the gate closes
     public static double LIFT_MOVE_FORWARD_IN = 55.0;          // forward move after the turn
-    public static double LIFT_MOVE_BACK_IN = 50.0;             // come back
+    public static double LIFT_MOVE_BACK_IN = 40.0;             // come back
     public static double END_TURN_ANTICLOCKWISE_DEG = 90.0;    // turn back anticlockwise
     public static double A_WAIT_SEC = 3.0;                     // sequence A: wait after opening the gate
     public static double A_BACK_IN = 85.0;                    // sequence A: drive back
-    public static double A_SHIFT_RIGHT_IN = 36.0;              // sequence A: first sideways shift to the right (before driving back)
+    public static double A_SHIFT_RIGHT_IN = 40.0;              // sequence A: first sideways shift to the right (before driving back)
     public static double A_SECOND_SHIFT_RIGHT_IN = 24.0;       // sequence A: final sideways shift to the right
-    public static double B_FIRST_SHIFT_RIGHT_IN = 36.0;        // sequence B: sideways shift to the right before driving back
-    public static double B_SHIFT_RIGHT_IN = 36.0;              // sequence B: sideways shift to the right (after the turn)
-    public static double B_BACK_IN = 100.0;                    // sequence B: drive back
+    public static double B_FIRST_SHIFT_RIGHT_IN = 40.0;        // sequence B: sideways shift to the right before driving back
+    public static double B_SHIFT_RIGHT_IN = 40.0;              // sequence B: sideways shift to the right (after the turn)
+    public static double B_BACK_IN = 90.0;                    // sequence B: drive back
     public static double B_TURN_ANTICLOCKWISE_DEG = 180.0;     // sequence B: turn after driving back
     public static double B_WAIT_SEC = 3.0;                     // sequence B: wait after opening the gate
-    public static double B_SHIFT_LEFT_IN = 36.0;               // sequence B: first sideways shift to the left (after the wait)
+    public static double B_SHIFT_LEFT_IN = 40.0;               // sequence B: first sideways shift to the left (after the wait)
     public static double B_FINAL_BACK_IN = 15.0;               // sequence B: move back after the first left shift
     public static double B_SECOND_SHIFT_LEFT_IN = 20.0;        // sequence B: final sideways shift to the left
 
