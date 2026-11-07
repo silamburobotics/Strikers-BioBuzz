@@ -25,8 +25,8 @@ import com.qualcomm.robotcore.util.Range;
  *           -> drive forward. Intake and flywheel run to the end.
  */
 @Config
-@Autonomous(name = "AutoREDStrikersStart2-ShootPark", group = "Auto")
-public class AutoREDStrikersStart2ShootPark extends LinearOpMode {
+@Autonomous(name = "2REDStrikersUnderHive", group = "Auto")
+public class Auto2REDStrikersUnderHive extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 8.0;   // give up looking for an AprilTag after this long and run the fallback sequence
     public static double FALLBACK_BACK_IN = 106.0;  // fallback: move back
