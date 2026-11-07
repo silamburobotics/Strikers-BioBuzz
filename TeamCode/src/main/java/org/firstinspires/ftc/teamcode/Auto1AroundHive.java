@@ -25,8 +25,8 @@ import com.qualcomm.robotcore.util.Range;
  * B (no tag):    shift right -> drive back -> turn 180 -> shift right -> open gate -> wait -> shift left -> back -> shift left.
  */
 @Config
-@Autonomous(name = "1REDStrikersAroundHive", group = "Auto")
-public class Auto1REDStrikersAroundHive extends LinearOpMode {
+@Autonomous(name = "1AroundHive", group = "Auto")
+public class Auto1AroundHive extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 2.0;       // after the shared steps, look for a red AprilTag for this long; if none, run sequence B
     public static double FLYWHEEL_RPM = 2900.0;       // auto shooter speed (teleop stays separate)
