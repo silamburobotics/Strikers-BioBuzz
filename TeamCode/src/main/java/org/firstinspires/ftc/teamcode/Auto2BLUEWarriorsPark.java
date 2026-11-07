@@ -28,7 +28,7 @@ import com.qualcomm.robotcore.util.Range;
 public class Auto2BLUEWarriorsPark extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 15.0;  // look for a blue AprilTag for up to this long
-    public static double FLYWHEEL_RPM = 2820.0;   // auto shooter speed (teleop stays separate)
+    public static double FLYWHEEL_RPM = 2900.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
     public static double FOUND_BACK_IN = 12.0;    // tag found: move back
