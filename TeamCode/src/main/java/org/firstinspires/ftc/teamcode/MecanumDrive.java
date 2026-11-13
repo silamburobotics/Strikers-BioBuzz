@@ -73,7 +73,7 @@ MecanumDrive {
         // feedforward parameters (in tick units)
         public double kS = 0.889;
         public double kV = 0.000538;
-        public double kA = 0;
+        public double kA = 0.00006;
 
         // path profile parameters (in inches)
         // reduced 15% from the original 50 / -30 / 50 (autonomous only; the teleops do not use this class)
@@ -86,9 +86,9 @@ MecanumDrive {
         public double maxAngAccel = Math.PI * 0.85;
 
         // path controller gains
-        public double axialGain = 0.0;
-        public double lateralGain = 0.0;
-        public double headingGain = 0.0; // shared with turn
+        public double axialGain = 2.0;
+        public double lateralGain = 4.0;
+        public double headingGain = 6.0; // shared with turn
 
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0.0;
