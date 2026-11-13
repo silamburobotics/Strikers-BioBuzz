@@ -66,7 +66,7 @@ MecanumDrive {
 
         // drive model parameters
         // tuned with ForwardPushTest / LateralPushTest (100 in pushes)
-        public double inPerTick = 0.00293;
+        public double inPerTick = 0.00295;
         public double lateralInPerTick = inPerTick;
         public double trackWidthTicks = 4939.462579153637;
 
