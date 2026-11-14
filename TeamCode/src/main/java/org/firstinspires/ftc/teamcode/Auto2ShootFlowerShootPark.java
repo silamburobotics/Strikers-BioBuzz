@@ -24,8 +24,8 @@ import com.qualcomm.robotcore.util.Range;
  *   -> right 12 -> gate open with kick, wait 3 s (second shot) -> gate closed -> left 55 -> stop everything.
  */
 @Config
-@Autonomous(name = "2UnderHive", group = "Auto")
-public class Auto2UnderHive extends LinearOpMode {
+@Autonomous(name = "2ShootFlowerShootPark", group = "Auto")
+public class Auto2ShootFlowerShootPark extends LinearOpMode {
 
     public static double START_WAIT_SEC = 7.0;    // wait at the start before doing anything
     public static double FLYWHEEL_RPM = 2900.0;   // auto shooter speed (teleop stays separate)
@@ -34,8 +34,8 @@ public class Auto2UnderHive extends LinearOpMode {
     public static double EARLY_BACK_IN = 14.0;    // move back after the first shot
     public static double SHIFT_LEFT_IN = 12.0;    // shift left after moving back
     public static double SECOND_MOVE_IN = 12.0;   // forward move after the shift left, then shake
-    public static double SHAKE_IN = 2.0;          // shake distance: right this far, then left this far (done twice, with the lift wiggle in between)
-    public static double LIFT_WIGGLE = 0.02;      // right lift wiggle size during the shake (up by this, then back down)
+    public static double SHAKE_IN = 4.0;          // shake distance: right this far, then left this far (done twice, with the lift wiggle in between)
+    public static double LIFT_WIGGLE = 0.03;      // right lift wiggle size during the shake (up by this, then back down)
     public static double LIFT_WIGGLE_MS = 200.0;  // time to let the servo move at each end of the wiggle
     public static double BACK_IN = 8.0;           // move back after the shake
     public static double SHIFT_RIGHT_IN = 12.0;   // shift right after moving back
