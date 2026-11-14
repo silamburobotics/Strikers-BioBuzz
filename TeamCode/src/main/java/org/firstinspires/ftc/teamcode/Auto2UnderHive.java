@@ -40,7 +40,7 @@ public class Auto2UnderHive extends LinearOpMode {
     public static double BACK_IN = 8.0;           // move back after the shake
     public static double SHIFT_RIGHT_IN = 12.0;   // shift right after moving back
     public static double SECOND_SHOT_SEC = 3.0;   // gate open, second shot
-    public static double FINAL_SHIFT_LEFT_IN = 55.0; // last sideways shift to the left
+    public static double FINAL_SHIFT_LEFT_IN = 50.0; // last sideways shift to the left
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;

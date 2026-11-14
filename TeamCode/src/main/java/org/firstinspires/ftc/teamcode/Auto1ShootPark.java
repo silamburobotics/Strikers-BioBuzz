@@ -30,7 +30,7 @@ public class Auto1ShootPark extends LinearOpMode {
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
     public static double FIRST_RIGHT_IN = 38.0;   // first sideways move to the right
-    public static double BACK_IN = 82.0;          // move back
+    public static double BACK_IN = 80.0;          // move back
     public static double SECOND_RIGHT_IN = 18.0;  // second sideways move to the right
 
     private DcMotorEx shooter1;

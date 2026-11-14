@@ -23,8 +23,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Autonomous(name = "2OnlyPark", group = "Auto")
 public class Auto2OnlyPark extends LinearOpMode {
 
-    public static double BACK_IN = 16.0;   // move back
-    public static double LEFT_IN = 58.0;   // move left
+    public static double BACK_IN = 10.0;   // move back
+    public static double LEFT_IN = 54.0;   // move left
 
     @Override
     public void runOpMode() {

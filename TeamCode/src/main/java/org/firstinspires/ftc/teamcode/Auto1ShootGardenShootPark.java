@@ -31,11 +31,11 @@ public class Auto1ShootGardenShootPark extends LinearOpMode {
     public static double SHOOT_WAIT_SEC = 3.0;        // intake on, gate open: shooting
     public static double START_TURN_CLOCKWISE_DEG = 90.0;      // turn clockwise after the gate closes
     public static double LIFT_MOVE_FORWARD_IN = 54.0;          // forward move after the turn
-    public static double LIFT_MOVE_BACK_IN = 54.0;             // come back
+    public static double LIFT_MOVE_BACK_IN = 50.0;             // come back
     public static double END_TURN_ANTICLOCKWISE_DEG = 90.0;    // turn back anticlockwise
     public static double A_WAIT_SEC = 3.0;                     // wait after opening the gate
-    public static double A_BACK_IN = 82.0;                   // sequence A: drive back
-    public static double A_SHIFT_RIGHT_IN = 36.0;              // sequence A: first sideways shift to the right (before driving back)
+    public static double A_BACK_IN = 80.0;                   // sequence A: drive back
+    public static double A_SHIFT_RIGHT_IN = 34.0;              // sequence A: first sideways shift to the right (before driving back)
     public static double A_SECOND_SHIFT_RIGHT_IN = 18.0;       // sequence A: final sideways shift to the right
 
     private DcMotorEx shooter1;
