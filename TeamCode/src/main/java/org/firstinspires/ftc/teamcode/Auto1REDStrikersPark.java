@@ -30,8 +30,8 @@ public class Auto1REDStrikersPark extends LinearOpMode {
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
     public static double FIRST_RIGHT_IN = 38.0;   // first sideways move to the right
-    public static double BACK_IN = 80.0;          // move back
-    public static double SECOND_RIGHT_IN = 22.0;  // second sideways move to the right
+    public static double BACK_IN = 82.0;          // move back
+    public static double SECOND_RIGHT_IN = 18.0;  // second sideways move to the right
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
@@ -81,9 +81,9 @@ public class Auto1REDStrikersPark extends LinearOpMode {
 
         runOpeningSteps(intake, gate, flywheelRPM);
 
-        shiftSideways(drive, -FIRST_RIGHT_IN);   // move right 30 in
-        moveAlongHeading(drive, -BACK_IN);       // move back 70 in
-        shiftSideways(drive, -SECOND_RIGHT_IN);  // move right 10 in
+        shiftSideways(drive, -FIRST_RIGHT_IN);   // move right 38 in
+        moveAlongHeading(drive, -BACK_IN);       // move back 82 in
+        shiftSideways(drive, -SECOND_RIGHT_IN);  // move right 18 in
 
         stopEverything(drive, intake, gate);
     }
