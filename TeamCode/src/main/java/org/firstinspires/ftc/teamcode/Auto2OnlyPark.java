@@ -20,8 +20,8 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Move back -> move left -> stop everything.
  */
 @Config
-@Autonomous(name = "2StrikersOnlyPark", group = "Auto")
-public class Auto2StrikersOnlyPark extends LinearOpMode {
+@Autonomous(name = "2OnlyPark", group = "Auto")
+public class Auto2OnlyPark extends LinearOpMode {
 
     public static double BACK_IN = 16.0;   // move back
     public static double LEFT_IN = 58.0;   // move left

@@ -24,8 +24,8 @@ import com.qualcomm.robotcore.util.Range;
  * Opening steps: shooter on (gate already open, intake off) -> wait 3 s -> intake on, wait 3 s (shooting) -> gate closed.
  */
 @Config
-@Autonomous(name = "2REDStrikersPark", group = "Auto")
-public class Auto2REDStrikersPark extends LinearOpMode {
+@Autonomous(name = "2ShootPark", group = "Auto")
+public class Auto2ShootPark extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 15.0;  // look for a red AprilTag for up to this long
     public static double FLYWHEEL_RPM = 2900.0;   // auto shooter speed (teleop stays separate)
