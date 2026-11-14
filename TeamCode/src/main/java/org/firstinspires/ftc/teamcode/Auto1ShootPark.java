@@ -23,8 +23,8 @@ import com.qualcomm.robotcore.util.Range;
  * -> move right -> move back -> move right -> stop everything.
  */
 @Config
-@Autonomous(name = "1REDStrikersPark", group = "Auto")
-public class Auto1REDStrikersPark extends LinearOpMode {
+@Autonomous(name = "1ShootPark", group = "Auto")
+public class Auto1ShootPark extends LinearOpMode {
 
     public static double FLYWHEEL_RPM = 2900.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off

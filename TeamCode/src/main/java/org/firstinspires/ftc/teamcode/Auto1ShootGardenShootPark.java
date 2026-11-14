@@ -23,8 +23,8 @@ import com.qualcomm.robotcore.util.Range;
  *   -> open gate -> wait -> shift right -> drive back -> shift right.
  */
 @Config
-@Autonomous(name = "1AroundHive", group = "Auto")
-public class Auto1AroundHive extends LinearOpMode {
+@Autonomous(name = "1ShootGardenShootPark", group = "Auto")
+public class Auto1ShootGardenShootPark extends LinearOpMode {
 
     public static double FLYWHEEL_RPM = 2900.0;       // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;       // flywheel on, gate already open, intake off
