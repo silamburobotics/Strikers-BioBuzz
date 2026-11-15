@@ -31,6 +31,7 @@ public class Auto1ShootGardenShootPark extends LinearOpMode {
     public static double SHOOT_WAIT_SEC = 3.0;        // intake on, gate open: shooting
     public static double START_TURN_CLOCKWISE_DEG = 90.0;      // turn clockwise after the gate closes
     public static double LIFT_MOVE_FORWARD_IN = 54.0;          // forward move after the turn
+    public static double LIFT_FORWARD_WAIT_SEC = 3.0;          // wait after the forward move, before coming back
     public static double LIFT_MOVE_BACK_IN = 50.0;             // come back
     public static double END_TURN_ANTICLOCKWISE_DEG = 90.0;    // turn back anticlockwise
     public static double A_WAIT_SEC = 3.0;                     // wait after opening the gate
@@ -108,6 +109,9 @@ public class Auto1ShootGardenShootPark extends LinearOpMode {
 
         // Step 6: move forward along the robot's current heading (the right lift stays UP the whole time).
         moveAlongHeading(drive, LIFT_MOVE_FORWARD_IN);
+
+        // Wait after the forward move (flywheel keeps running).
+        holdFlywheel(flywheelRPM, LIFT_FORWARD_WAIT_SEC, "Waiting after forward move");
 
         // Step 7: come back.
         moveAlongHeading(drive, -LIFT_MOVE_BACK_IN);
