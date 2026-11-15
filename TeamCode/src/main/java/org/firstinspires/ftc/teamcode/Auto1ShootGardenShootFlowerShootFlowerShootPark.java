@@ -19,7 +19,7 @@ import com.qualcomm.robotcore.util.Range;
  * RED alliance, Start 1: shoot, garden, shoot, flower, shoot, flower, shoot, park. No AprilTag check.
  *
  * Shoot -> turn cw 90 -> forward 54 -> wait -> back 50 -> turn cw 90 -> gate open, wait -> shift right 34
- *   -> back 36 -> turn cw 90 -> gate closed -> lift DOWN -> forward 12 -> shake -> back 12 -> lift UP
+ *   -> back 36 -> turn acw 90 -> gate closed -> lift DOWN -> forward 12 -> shake -> back 12 -> lift UP
  *   -> turn acw 90 -> back 50 -> shift left 24 -> turn 180 -> forward 10 -> wait -> gate open
  *   -> back 18 -> shift left 55. Intake and flywheel run to the end.
  */
@@ -124,7 +124,7 @@ public class Auto1ShootGardenShootFlowerShootFlowerShootPark extends LinearOpMod
         shiftSideways(drive, -SHIFT_RIGHT_IN);                    // 11. shift right
         moveAlongHeading(drive, -BACK_2_IN);                      // 12. drive back
 
-        turnDegrees(drive, -TURN_CLOCKWISE_DEG);                 // 13. turn clockwise
+        turnDegrees(drive, TURN_ANTICLOCKWISE_DEG);              // 13. turn anticlockwise
         gate.setPosition(StrikersConfig.CLOSED_POSITION);         // 14. gate closed
 
         // 15. Right lift DOWN (same position as teleop's bumper-held DOWN).
