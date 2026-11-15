@@ -16,10 +16,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 /**
- * Start 1: shoot, then run the Around Hive sequence. No AprilTag check.
+ * Start 1: shoot, then run the Shoot Garden Shoot Park sequence. No AprilTag check.
  *
  * Shooter on (gate already open, intake off) -> wait -> intake on, wait (shooting) -> gate closed
- *   -> turn clockwise -> forward -> back -> turn anticlockwise (right lift stays UP)
+ *   -> back 8 -> shift right 50 -> forward 4 -> shift left 3 -> shift right 4 -> wait 2 s -> shift left 48 (right lift stays UP)
  *   -> open gate -> wait -> shift right -> drive back -> shift right.
  */
 @Config
@@ -29,11 +29,13 @@ public class Auto1ShootGardenShootPark extends LinearOpMode {
     public static double FLYWHEEL_RPM = 2900.0;       // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;       // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;        // intake on, gate open: shooting
-    public static double START_TURN_CLOCKWISE_DEG = 90.0;      // turn clockwise after the gate closes
-    public static double LIFT_MOVE_FORWARD_IN = 54.0;          // forward move after the turn
-    public static double LIFT_FORWARD_WAIT_SEC = 3.0;          // wait after the forward move, before coming back
-    public static double LIFT_MOVE_BACK_IN = 50.0;             // come back
-    public static double END_TURN_ANTICLOCKWISE_DEG = 90.0;    // turn back anticlockwise
+    public static double FIRST_BACK_IN = 8.0;                  // move back after the gate closes
+    public static double FIRST_SHIFT_RIGHT_IN = 50.0;          // shift right
+    public static double FIRST_FORWARD_IN = 4.0;               // move forward after the shift right
+    public static double SMALL_SHIFT_LEFT_IN = 3.0;            // small shift left
+    public static double SMALL_SHIFT_RIGHT_IN = 4.0;           // small shift right
+    public static double MID_WAIT_SEC = 2.0;                   // wait before the big shift left
+    public static double BIG_SHIFT_LEFT_IN = 48.0;             // shift left
     public static double A_WAIT_SEC = 3.0;                     // wait after opening the gate
     public static double A_BACK_IN = 80.0;                   // sequence A: drive back
     public static double A_SHIFT_RIGHT_IN = 34.0;              // sequence A: first sideways shift to the right (before driving back)
@@ -99,32 +101,26 @@ public class Auto1ShootGardenShootPark extends LinearOpMode {
         // Step 4: gate closed.
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
 
-        // Step 5: turn clockwise (Road Runner counterclockwise is positive, so the angle is negated).
-        if (opModeIsActive()) {
-            runWithFlywheel(
-                    drive.actionBuilder(drive.localizer.getPose())
-                            .turn(-Math.toRadians(START_TURN_CLOCKWISE_DEG))
-                            .build());
-        }
+        // Step 5: move back.
+        moveAlongHeading(drive, -FIRST_BACK_IN);
 
-        // Step 6: move forward along the robot's current heading (the right lift stays UP the whole time).
-        moveAlongHeading(drive, LIFT_MOVE_FORWARD_IN);
+        // Step 6: shift right.
+        shiftSideways(drive, -FIRST_SHIFT_RIGHT_IN);
 
-        // Wait after the forward move (flywheel keeps running).
-        holdFlywheel(flywheelRPM, LIFT_FORWARD_WAIT_SEC, "Waiting after forward move");
+        // Step 7: move forward.
+        moveAlongHeading(drive, FIRST_FORWARD_IN);
 
-        // Step 7: come back.
-        moveAlongHeading(drive, -LIFT_MOVE_BACK_IN);
+        // Step 8: shift left a little, then right a little.
+        shiftSideways(drive, SMALL_SHIFT_LEFT_IN);
+        shiftSideways(drive, -SMALL_SHIFT_RIGHT_IN);
 
-        // Step 8: turn anticlockwise.
-        if (opModeIsActive()) {
-            runWithFlywheel(
-                    drive.actionBuilder(drive.localizer.getPose())
-                            .turn(Math.toRadians(END_TURN_ANTICLOCKWISE_DEG))
-                            .build());
-        }
+        // Step 9: wait (flywheel keeps running).
+        holdFlywheel(flywheelRPM, MID_WAIT_SEC, "Waiting");
 
-        // Step 9: open gate (with the kick), wait, shift right, drive back, then shift right again.
+        // Step 10: shift left.
+        shiftSideways(drive, BIG_SHIFT_LEFT_IN);
+
+        // Step 11: open gate (with the kick), wait, shift right, drive back, then shift right again.
         if (opModeIsActive()) {
             openGateWithKick(gate, flywheelRPM);
         }
