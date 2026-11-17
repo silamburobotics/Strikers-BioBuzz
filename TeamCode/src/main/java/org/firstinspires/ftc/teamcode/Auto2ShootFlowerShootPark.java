@@ -21,7 +21,7 @@ import com.qualcomm.robotcore.util.Range;
  *
  * Wait 7 s -> flywheel on (gate already open) -> wait 3 s -> intake on, wait 3 s (shooting) -> gate closed
  *   -> back 14 -> left 12 -> lift DOWN -> forward 12 -> shake (with lift wiggle) -> back 8 -> lift UP
- *   -> right 12 -> gate open with kick, wait 3 s (second shot) -> gate closed -> left 55 -> stop everything.
+ *   -> right 12 -> gate open, wait 3 s (second shot) -> gate closed -> left 55 -> stop everything.
  */
 @Config
 @Autonomous(name = "2ShootFlowerShootPark", group = "Auto")
@@ -127,8 +127,8 @@ public class Auto2ShootFlowerShootPark extends LinearOpMode {
 
         shiftSideways(drive, -SHIFT_RIGHT_IN);     // shift right
 
-        // Gate open with a kick, wait (second shot), then gate closed.
-        if (opModeIsActive()) openGateWithKick(gate, flywheelRPM);
+        // Gate open, wait (second shot), then gate closed.
+        if (opModeIsActive()) gate.setPosition(StrikersConfig.OPEN_POSITION);
         holdFlywheel(flywheelRPM, SECOND_SHOT_SEC, "Gate open (second shot)");
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
 
@@ -183,13 +183,6 @@ public class Auto2ShootFlowerShootPark extends LinearOpMode {
         }
 
         shakeOnce(drive);
-    }
-
-    /** Opens the gate with a kick: goes to GATE_KICK_POSITION for GATE_KICK_MS, then settles at OPEN_POSITION. */
-    private void openGateWithKick(Servo gate, double flywheelRPM) {
-        gate.setPosition(StrikersConfig.GATE_KICK_POSITION);
-        holdFlywheel(flywheelRPM, StrikersConfig.GATE_KICK_MS / 1000.0, "Gate kick");
-        gate.setPosition(StrikersConfig.OPEN_POSITION);
     }
 
     /** Stop everything: intake, flywheel, drive and gate. */

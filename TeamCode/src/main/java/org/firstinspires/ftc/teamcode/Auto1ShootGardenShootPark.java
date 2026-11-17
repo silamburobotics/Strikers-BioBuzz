@@ -120,9 +120,9 @@ public class Auto1ShootGardenShootPark extends LinearOpMode {
         // Step 10: shift left.
         shiftSideways(drive, BIG_SHIFT_LEFT_IN);
 
-        // Step 11: open gate (with the kick), wait, shift right, drive back, then shift right again.
+        // Step 11: open gate, wait, shift right, drive back, then shift right again.
         if (opModeIsActive()) {
-            openGateWithKick(gate, flywheelRPM);
+            gate.setPosition(StrikersConfig.OPEN_POSITION);
         }
         holdFlywheel(flywheelRPM, A_WAIT_SEC, "Waiting (gate open)");
         shiftSideways(drive, -A_SHIFT_RIGHT_IN);        // shift right
@@ -163,13 +163,6 @@ public class Auto1ShootGardenShootPark extends LinearOpMode {
                                 here.position.x - leftInches * Math.sin(heading),
                                 here.position.y + leftInches * Math.cos(heading)))
                         .build());
-    }
-
-    /** Opens the gate with a kick: goes to GATE_KICK_POSITION for GATE_KICK_MS, then settles at OPEN_POSITION. */
-    private void openGateWithKick(Servo gate, double flywheelRPM) {
-        gate.setPosition(StrikersConfig.GATE_KICK_POSITION);
-        holdFlywheel(flywheelRPM, StrikersConfig.GATE_KICK_MS / 1000.0, "Gate kick");
-        gate.setPosition(StrikersConfig.OPEN_POSITION);
     }
 
     /** Like Actions.runBlocking, but keeps the flywheel control loop running while the action runs. */

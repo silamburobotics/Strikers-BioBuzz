@@ -117,8 +117,8 @@ public class Auto1ShootGardenShootFlowerShootFlowerShootPark extends LinearOpMod
         moveAlongHeading(drive, -BACK_1_IN);                      // 8. back
         turnDegrees(drive, -TURN_CLOCKWISE_DEG);                 // 9. turn clockwise
 
-        // 10. Gate open (with the kick), wait.
-        if (opModeIsActive()) openGateWithKick(gate, flywheelRPM);
+        // 10. Gate open, wait.
+        if (opModeIsActive()) gate.setPosition(StrikersConfig.OPEN_POSITION);
         holdFlywheel(flywheelRPM, GATE_WAIT_SEC, "Waiting (gate open)");
 
         shiftSideways(drive, -SHIFT_RIGHT_IN);                    // 11. shift right
@@ -144,8 +144,8 @@ public class Auto1ShootGardenShootFlowerShootFlowerShootPark extends LinearOpMod
         moveAlongHeading(drive, FORWARD_3_IN);                    // 24. forward
         holdFlywheel(flywheelRPM, FORWARD_3_WAIT_SEC, "Waiting after forward move"); // 25. wait
 
-        // 26. Gate open (with the kick).
-        if (opModeIsActive()) openGateWithKick(gate, flywheelRPM);
+        // 26. Gate open.
+        if (opModeIsActive()) gate.setPosition(StrikersConfig.OPEN_POSITION);
 
         moveAlongHeading(drive, -BACK_5_IN);                      // 27. back
         shiftSideways(drive, SHIFT_LEFT_2_IN);                    // 28. shift left
@@ -215,13 +215,6 @@ public class Auto1ShootGardenShootFlowerShootFlowerShootPark extends LinearOpMod
         }
 
         shakeOnce(drive);
-    }
-
-    /** Opens the gate with a kick: goes to GATE_KICK_POSITION for GATE_KICK_MS, then settles at OPEN_POSITION. */
-    private void openGateWithKick(Servo gate, double flywheelRPM) {
-        gate.setPosition(StrikersConfig.GATE_KICK_POSITION);
-        holdFlywheel(flywheelRPM, StrikersConfig.GATE_KICK_MS / 1000.0, "Gate kick");
-        gate.setPosition(StrikersConfig.OPEN_POSITION);
     }
 
     /** Like Actions.runBlocking, but keeps the flywheel control loop running while the action runs. */
