@@ -211,12 +211,8 @@ public class BioBuzzCentricBlueStrikers extends LinearOpMode {
             // GAMEPAD 2: GATE, SHIFTER & SHOOTER
             // ==========================================
 
-            // --- Axon Gate Servo (G2.B = Open, G2.X = Close) ---
-            if (gamepad2.b) {
-                isGateOpen = true;
-            } else if (gamepad2.x) {
-                isGateOpen = false;
-            }
+            // --- Axon Gate Servo (G2.B held = Open, released = Closed) ---
+            isGateOpen = gamepad2.b;
             double targetGatePos = isGateOpen ? StrikersConfig.OPEN_POSITION : StrikersConfig.CLOSED_POSITION;
             axonGateServo.setPosition(targetGatePos);
 
