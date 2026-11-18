@@ -28,7 +28,7 @@ import com.qualcomm.robotcore.util.Range;
 public class Auto2ShootFlowerShootPark extends LinearOpMode {
 
     public static double START_WAIT_SEC = 7.0;    // wait at the start before doing anything
-    public static double FLYWHEEL_RPM = 2900.0;   // auto shooter speed (teleop stays separate)
+    public static double FLYWHEEL_RPM = 3000.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
     public static double EARLY_BACK_IN = 14.0;    // move back after the first shot
