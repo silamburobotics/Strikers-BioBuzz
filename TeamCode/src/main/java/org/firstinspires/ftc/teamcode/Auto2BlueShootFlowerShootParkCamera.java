@@ -17,11 +17,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 /**
- * BLUE alliance, Start 2: look for a BLUE AprilTag, then shoot twice with a shake in between.
+ * BLUE alliance, Start 2: look for a BLUE AprilTag, then shoot twice with a move in between.
  *
  * Look for a BLUE AprilTag (up to 15 s) -> flywheel on (gate already open) -> wait 3 s
  *   -> intake on, wait 3 s (shooting) -> gate closed -> back 14 -> left 12 -> lift DOWN -> forward 12
- *   -> shake (with lift wiggle) -> wait 1 s -> back 8 -> lift UP -> right 12 -> forward 8
+ *   -> wait 1 s -> back 8 -> lift UP -> right 12 -> forward 8
  *   -> gate open, wait 3 s (second shot) -> gate closed -> back 8 -> left 50 -> stop everything.
  */
 @Config
@@ -35,11 +35,8 @@ public class Auto2BlueShootFlowerShootParkCamera extends LinearOpMode {
     public static double EARLY_BACK_IN = 14.0;    // move back after the first shot
     public static double SHIFT_LEFT_IN = 12.0;    // shift left after moving back
     public static double SECOND_MOVE_IN = 12.0;   // forward move after the shift left
-    public static double AFTER_SHAKE_WAIT_SEC = 1.0;  // wait after the shake, before moving back
-    public static double SHAKE_IN = 4.0;          // shake distance: right this far, then left this far (done twice, with the lift wiggle in between)
-    public static double LIFT_WIGGLE = 0.03;      // right lift wiggle size during the shake (up by this, then back down)
-    public static double LIFT_WIGGLE_MS = 200.0;  // time to let the servo move at each end of the wiggle
-    public static double BACK_IN = 8.0;           // move back after the shake
+    public static double WAIT_BEFORE_BACK_SEC = 1.0;  // wait after the forward move, before moving back
+    public static double BACK_IN = 8.0;           // move back after the wait
     public static double SHIFT_RIGHT_IN = 12.0;   // shift right after moving back
     public static double FORWARD_BEFORE_SHOT_IN = 8.0; // forward move before the second shot
     public static double SECOND_SHOT_SEC = 3.0;   // gate open, second shot
@@ -140,10 +137,7 @@ public class Auto2BlueShootFlowerShootParkCamera extends LinearOpMode {
 
         moveAlongHeading(drive, SECOND_MOVE_IN);   // move forward
 
-
-        shakeWithLiftWiggle(drive, intakeLiftRight, flywheelRPM);
-
-        holdFlywheel(flywheelRPM, AFTER_SHAKE_WAIT_SEC, "Waiting after shake");
+        holdFlywheel(flywheelRPM, WAIT_BEFORE_BACK_SEC, "Waiting");
 
         moveAlongHeading(drive, -BACK_IN);         // move back
 
@@ -188,28 +182,6 @@ public class Auto2BlueShootFlowerShootParkCamera extends LinearOpMode {
                                 here.position.x - leftInches * Math.sin(heading),
                                 here.position.y + leftInches * Math.cos(heading)))
                         .build());
-    }
-
-    /** One shake: SHAKE_IN to the right, then SHAKE_IN to the left (sideways, heading held). */
-    private void shakeOnce(MecanumDrive drive) {
-        shiftSideways(drive, -SHAKE_IN); // right
-        shiftSideways(drive, SHAKE_IN);  // left
-    }
-
-    /** Shake, then move the right lift up by LIFT_WIGGLE and back down by LIFT_WIGGLE, then shake again. */
-    private void shakeWithLiftWiggle(MecanumDrive drive, Servo intakeLiftRight, double flywheelRPM) {
-        shakeOnce(drive);
-
-        if (intakeLiftRight != null && opModeIsActive()) {
-            double down = StrikersConfig.INTAKE_LIFT_DOWN_POS;
-            double upDirection = StrikersConfig.INTAKE_LIFT_UP_POS >= down ? 1.0 : -1.0;
-            intakeLiftRight.setPosition(Range.clip(down + upDirection * LIFT_WIGGLE, 0.0, 1.0)); // up by 0.02
-            holdFlywheel(flywheelRPM, LIFT_WIGGLE_MS / 1000.0, "Lift wiggle up");
-            intakeLiftRight.setPosition(down); // back to the DOWN position
-            holdFlywheel(flywheelRPM, LIFT_WIGGLE_MS / 1000.0, "Lift wiggle down");
-        }
-
-        shakeOnce(drive);
     }
 
     /** Stop everything: intake, flywheel, drive and gate. */

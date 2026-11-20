@@ -19,17 +19,17 @@ import com.qualcomm.robotcore.util.Range;
  * RED alliance, Start 1: shoot, move, look for a RED AprilTag, then run the Tag Found or Tag Not Found path.
  *
  * Opening: flywheel on (gate open) -> wait 3 -> intake on, wait 1 -> gate closed -> back 8 -> shift right 50
- *   -> lift DOWN -> forward 6 -> wait 1 -> lift UP -> shift left 48 -> look for a RED AprilTag (up to 2 s).
+ *   -> lift DOWN -> forward 5 -> wait 1 -> lift UP -> shift left 48 -> look for a RED AprilTag (up to 2 s).
  * Found:     gate open, wait 1 -> shift right 34 -> gate closed -> back 30 -> turn cw 90 -> lift DOWN -> forward 12
- *   -> wait 2 -> back 12 -> lift UP -> shift right 60 -> turn 90 -> shift right 18 -> lift DOWN -> forward 8
- *   -> gate open, wait 1 -> forward 3 -> wait 2 -> back 12 -> lift UP -> shift left 40.
- * Not found: shift right 34 -> back 92 -> shift left 18 -> turn 180 -> lift DOWN -> forward 8 -> gate open, wait 1
- *   -> forward 3 -> wait 2 -> back 10 -> lift UP -> shift left 40.
+ *   -> wait 2 -> back 12 -> lift UP -> shift right 80 -> turn 90 -> shift right 20 -> lift DOWN -> forward 8
+ *   -> gate open, wait 1 -> forward 3 -> wait 2 -> back 12 -> lift UP -> shift left 36.
+ * Not found: shift right 34 -> back 112 -> shift left 20 -> turn 180 -> lift DOWN -> forward 8 -> gate open, wait 1
+ *   -> forward 3 -> wait 2 -> back 10 -> lift UP -> shift left 36.
  * Intake and flywheel run to the end. Flywheel RPM comes from the battery voltage (2860 if unreadable).
  */
 @Config
-@Autonomous(name = "1ShootGardenShootFlowerShootFlowerShootParkCamera", group = "Auto")
-public class Auto1ShootGardenShootFlowerShootFlowerShootParkCamera extends LinearOpMode {
+@Autonomous(name = "1RedShootGardenShootFlowerShootFlowerShootParkCamera", group = "Auto")
+public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends LinearOpMode {
 
     private double flywheelTargetRPM = StrikersConfig.MID_BATTERY_RPM; // set from the battery at init
 
@@ -40,7 +40,7 @@ public class Auto1ShootGardenShootFlowerShootFlowerShootParkCamera extends Linea
     public static double SHOOT_WAIT_SEC = 1.0;
     public static double OPEN_BACK_IN = 8.0;
     public static double OPEN_SHIFT_RIGHT_IN = 50.0;
-    public static double OPEN_FORWARD_IN = 6.0;
+    public static double OPEN_FORWARD_IN = 5.0;
     public static double OPEN_WAIT_SEC = 1.0;
     public static double OPEN_SHIFT_LEFT_IN = 48.0;
 
@@ -52,27 +52,27 @@ public class Auto1ShootGardenShootFlowerShootFlowerShootParkCamera extends Linea
     public static double F_FORWARD_1_IN = 12.0;
     public static double F_WAIT_1_SEC = 2.0;
     public static double F_BACK_2_IN = 12.0;
-    public static double F_SHIFT_RIGHT_2_IN = 60.0;
+    public static double F_SHIFT_RIGHT_2_IN = 80.0;
     public static double F_TURN_2_DEG = -90.0;        // "rotate 90" (clockwise). Change to +90 for anticlockwise
-    public static double F_SHIFT_RIGHT_3_IN = 18.0;
+    public static double F_SHIFT_RIGHT_3_IN = 20.0;
     public static double F_FORWARD_2_IN = 8.0;
     public static double F_GATE_WAIT_2_SEC = 1.0;
     public static double F_FORWARD_3_IN = 3.0;
     public static double F_WAIT_2_SEC = 2.0;
     public static double F_BACK_3_IN = 12.0;
-    public static double F_SHIFT_LEFT_IN = 40.0;
+    public static double F_SHIFT_LEFT_IN = 36.0;
 
     // Tag NOT found
     public static double N_SHIFT_RIGHT_IN = 34.0;
-    public static double N_BACK_IN = 92.0;
-    public static double N_SHIFT_LEFT_1_IN = 18.0;
+    public static double N_BACK_IN = 112.0;
+    public static double N_SHIFT_LEFT_1_IN = 20.0;
     public static double N_TURN_DEG = 180.0;          // rotate 180 (anticlockwise)
     public static double N_FORWARD_1_IN = 8.0;
     public static double N_GATE_WAIT_SEC = 1.0;
     public static double N_FORWARD_2_IN = 3.0;
     public static double N_WAIT_SEC = 2.0;
     public static double N_BACK_2_IN = 10.0;
-    public static double N_SHIFT_LEFT_2_IN = 40.0;
+    public static double N_SHIFT_LEFT_2_IN = 36.0;
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
