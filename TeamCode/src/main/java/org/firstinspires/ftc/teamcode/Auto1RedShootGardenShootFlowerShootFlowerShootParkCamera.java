@@ -24,7 +24,7 @@ import com.qualcomm.robotcore.util.Range;
  *   -> wait 2 -> back 12 -> lift UP -> shift right 50 -> forward 16.
  * Not found: shift right 34 -> back 100 -> shift left 20 -> turn 180 -> lift DOWN -> forward 12 -> flywheel -50 RPM -> gate open, wait 1
  *   -> forward 6 -> wait 1 -> back 20 -> lift UP -> turn cw 60 -> back 30.
- * The turret auto-aims at the MIDDLE of the red LEFT (31,32) and RIGHT (35,36) tag sets when both are visible (holds its last angle if not). Turret must start centered.
+ * The turret auto-aims at the MIDDLE of the red LEFT (31,32) and RIGHT (35,36) tag sets when both are visible (re-centers to 0 deg if the tags are lost). Turret must start centered.
  * Intake and flywheel run to the end. Flywheel RPM comes from the battery voltage (2860 if unreadable).
  */
 @Config
@@ -35,6 +35,7 @@ public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends Li
 
     public static double TAG_TIMEOUT_SEC = 2.0;       // look for a red AprilTag for up to this long
     public static boolean AIM_AT_MIDPOINT = true;     // aim between the LEFT and RIGHT red tag sets (false = aim at the single closest tag)
+    public static double TAG_LOST_RECENTER_SEC = 0.3;  // tag lost this long -> turret re-centers to 0 deg (like teleop)
     public static boolean AUTO_AIM_ENABLED = true;    // turret auto-aims at the RED AprilTag whenever it is visible (set false to disable)
 
     // Opening (both outcomes)
@@ -79,6 +80,7 @@ public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends Li
     private LimelightShooterSubsystem vision;
     private DcMotorEx turret;                            // null if the turret is not in the robot configuration
     private double targetTurretAngle = 0.0;              // degrees, 0 = center home
+    private final ElapsedTime tagLostTimer = new ElapsedTime(); // time since the aim target was last seen
 
     @Override
     public void runOpMode() {
@@ -302,7 +304,7 @@ public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends Li
 
     /**
      * Updates the camera (RED tags only) and points the turret between the LEFT and RIGHT tag sets (AIM_AT_MIDPOINT),
-     * or at the single closest tag. If it cannot aim (tags not visible, or only one set visible) the turret HOLDS its last angle.
+     * or at the single closest tag. If it cannot aim (tags lost for TAG_LOST_RECENTER_SEC) the turret RE-CENTERS to 0 deg, like teleop.
      * During the search window it also latches tagFound.
      */
     private void updateAim() {
@@ -314,13 +316,21 @@ public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends Li
         if (!AUTO_AIM_ENABLED || turret == null) return;
         double ticksPerDegree = (StrikersConfig.TURRET_TICKS_PER_REV * StrikersConfig.TURRET_GEAR_RATIO) / 360.0;
         double currentAngle = turret.getCurrentPosition() / ticksPerDegree;
+        boolean canAim;
         if (AIM_AT_MIDPOINT) {
-            // Aim at the middle of the LEFT and RIGHT tag sets. If only one set is visible, hold the last angle.
-            if (vision.hasBothTagSets()) {
-                targetTurretAngle = vision.getTurretTargetAngleToMidpoint(currentAngle);
+            // Aim at the middle of the LEFT and RIGHT tag sets (needs both sets visible).
+            canAim = vision.hasBothTagSets();
+            if (canAim) targetTurretAngle = vision.getTurretTargetAngleToMidpoint(currentAngle);
+        } else {
+            canAim = visible;
+            if (canAim && Math.abs(vision.getTxError()) > LimelightShooterSubsystem.AIM_DEADBAND_DEG) {
+                targetTurretAngle = vision.getTurretTargetAngle(currentAngle);
             }
-        } else if (visible && Math.abs(vision.getTxError()) > LimelightShooterSubsystem.AIM_DEADBAND_DEG) {
-            targetTurretAngle = vision.getTurretTargetAngle(currentAngle);
+        }
+        if (canAim) {
+            tagLostTimer.reset();
+        } else if (tagLostTimer.seconds() > TAG_LOST_RECENTER_SEC) {
+            targetTurretAngle = 0.0; // tag lost: re-center to 0 deg, same as teleop
         }
         targetTurretAngle = Range.clip(targetTurretAngle, -StrikersConfig.TURRET_MAX_ANGLE_DEG, StrikersConfig.TURRET_MAX_ANGLE_DEG);
         turret.setTargetPosition((int) Math.round(targetTurretAngle * ticksPerDegree));
