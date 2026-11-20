@@ -19,9 +19,9 @@ import com.qualcomm.robotcore.util.Range;
  * BLUE alliance, Start 1: shoot, move, then look for a BLUE AprilTag and park depending on the result.
  *
  * Shooter on (gate already open, intake off) -> wait -> intake on, wait 1 s (shooting) -> gate closed
- *   -> back 8 -> shift right 50 -> forward 8 -> shift left 3 -> shift right 4 -> wait 2 s -> shift left 48
+ *   -> back 8 -> shift right 50 -> forward 10 -> shift left 3 -> shift right 4 -> wait 2 s -> shift left 48
  *   -> look for a BLUE AprilTag (up to 2 s)
- *   Found:     open gate, wait 1 s.
+ *   Found:     open gate, wait 1 s, then shift right 34 -> drive back 80 -> shift right 18.
  *   Not found: shift right 34 -> drive back 80 -> shift right 18.
  * Intake and flywheel run to the end.
  */
@@ -35,15 +35,15 @@ public class Auto1BlueShootGardenShootParkCamera extends LinearOpMode {
     public static double SHOOT_WAIT_SEC = 1.0;        // intake on, gate open: shooting
     public static double FIRST_BACK_IN = 8.0;                  // move back after the gate closes
     public static double FIRST_SHIFT_RIGHT_IN = 50.0;          // shift right
-    public static double FIRST_FORWARD_IN = 8.0;               // move forward after the shift right
+    public static double FIRST_FORWARD_IN = 10.0;               // move forward after the shift right
     public static double SMALL_SHIFT_LEFT_IN = 3.0;            // small shift left
     public static double SMALL_SHIFT_RIGHT_IN = 4.0;           // small shift right
     public static double MID_WAIT_SEC = 2.0;                   // wait before the big shift left
     public static double BIG_SHIFT_LEFT_IN = 48.0;             // shift left
     public static double FOUND_WAIT_SEC = 1.0;                 // tag found: wait after opening the gate
-    public static double NOT_FOUND_SHIFT_RIGHT_IN = 34.0;      // tag not found: first shift right
-    public static double NOT_FOUND_BACK_IN = 80.0;             // tag not found: drive back
-    public static double NOT_FOUND_SECOND_SHIFT_RIGHT_IN = 18.0; // tag not found: final shift right
+    public static double SHIFT_RIGHT_IN = 34.0;      // first shift right (both outcomes)
+    public static double BACK_IN = 80.0;             // drive back (both outcomes)
+    public static double SECOND_SHIFT_RIGHT_IN = 18.0; // final shift right (both outcomes)
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
@@ -151,16 +151,16 @@ public class Auto1BlueShootGardenShootParkCamera extends LinearOpMode {
         vision.stop(); // done with the camera
         if (!opModeIsActive()) return;
 
+        // Tag found: open the gate and wait first. Tag not found: skip this.
         if (tagFound) {
-            // ---------- Tag found: open the gate, then wait ----------
             gate.setPosition(StrikersConfig.OPEN_POSITION);
             holdFlywheel(flywheelRPM, FOUND_WAIT_SEC, "Tag found: waiting (gate open)");
-        } else {
-            // ---------- Tag not found: shift right, drive back, shift right ----------
-            shiftSideways(drive, -NOT_FOUND_SHIFT_RIGHT_IN);
-            moveAlongHeading(drive, -NOT_FOUND_BACK_IN);
-            shiftSideways(drive, -NOT_FOUND_SECOND_SHIFT_RIGHT_IN);
         }
+
+        // Both outcomes: shift right, drive back, shift right.
+        shiftSideways(drive, -SHIFT_RIGHT_IN);
+        moveAlongHeading(drive, -BACK_IN);
+        shiftSideways(drive, -SECOND_SHIFT_RIGHT_IN);
 
         // Intake and flywheel keep running until the period ends.
         while (opModeIsActive()) {
