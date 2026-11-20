@@ -23,7 +23,7 @@ import com.qualcomm.robotcore.util.Range;
  * Found:     gate open, wait 1 -> shift right 34 -> gate closed -> back 30 -> turn cw 90 -> lift DOWN -> forward 12
  *   -> wait 2 -> back 12 -> lift UP -> shift right 50 -> forward 16.
  * Not found: shift right 34 -> back 100 -> shift left 20 -> turn 180 -> lift DOWN -> forward 12 -> flywheel -50 RPM -> gate open, wait 1
- *   -> forward 6 -> wait 2 -> back 20 -> lift UP -> turn cw 80 -> back 30.
+ *   -> forward 6 -> wait 1 -> back 20 -> lift UP -> turn cw 60 -> back 30.
  * The turret auto-aims at the MIDDLE of the red LEFT (31,32) and RIGHT (35,36) tag sets when both are visible (holds its last angle if not). Turret must start centered.
  * Intake and flywheel run to the end. Flywheel RPM comes from the battery voltage (2860 if unreadable).
  */
@@ -65,9 +65,9 @@ public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends Li
     public static double N_FORWARD_1_IN = 12.0;
     public static double N_GATE_WAIT_SEC = 1.0;
     public static double N_FORWARD_2_IN = 6.0;
-    public static double N_WAIT_SEC = 2.0;
+    public static double N_WAIT_SEC = 1.0;
     public static double N_BACK_2_IN = 20.0;
-    public static double N_TURN_2_DEG = -80.0;        // clockwise 80
+    public static double N_TURN_2_DEG = -60.0;        // clockwise 60
     public static double N_BACK_3_IN = 30.0;
     public static double SECOND_SHOT_RPM_REDUCTION = 50.0; // flywheel RPM lowered by this much from the gate open in this path onward
 
