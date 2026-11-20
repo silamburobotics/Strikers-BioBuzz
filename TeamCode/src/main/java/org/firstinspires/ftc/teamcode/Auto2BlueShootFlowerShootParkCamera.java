@@ -17,24 +17,35 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 /**
- * RED alliance, Start 2: park. Looks for a RED AprilTag for up to TAG_TIMEOUT_SEC first.
+ * BLUE alliance, Start 2: look for a BLUE AprilTag, then shoot twice with a shake in between.
  *
- * Found:     opening steps -> move back -> move left -> stop everything.
- * Not found: opening steps -> move back -> move left -> stop everything.
- * Opening steps: shooter on (gate already open, intake off) -> wait 3 s -> intake on, wait 3 s (shooting) -> gate closed.
+ * Look for a BLUE AprilTag (up to 15 s) -> flywheel on (gate already open) -> wait 3 s
+ *   -> intake on, wait 3 s (shooting) -> gate closed -> back 14 -> left 12 -> lift DOWN -> forward 12 -> wait 2 s
+ *   -> shake (with lift wiggle) -> wait 2 s -> back 8 -> lift UP -> right 12 -> forward 8
+ *   -> gate open, wait 3 s (second shot) -> gate closed -> back 8 -> left 50 -> stop everything.
  */
 @Config
-@Autonomous(name = "2ShootPark", group = "Auto")
-public class Auto2ShootPark extends LinearOpMode {
+@Autonomous(name = "2BlueShootFlowerShootParkCamera", group = "Auto")
+public class Auto2BlueShootFlowerShootParkCamera extends LinearOpMode {
 
-    public static double TAG_TIMEOUT_SEC = 15.0;  // look for a red AprilTag for up to this long
-    public static double FLYWHEEL_RPM = 3000.0;   // auto shooter speed (teleop stays separate)
+    public static double TAG_TIMEOUT_SEC = 15.0;  // look for a blue AprilTag for up to this long
+    public static double FLYWHEEL_RPM = 2860.0;   // auto shooter speed (teleop stays separate)
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
-    public static double FOUND_BACK_IN = 10.0;    // tag found: move back
-    public static double FOUND_LEFT_IN = 54.0;    // tag found: move left
-    public static double NOT_FOUND_BACK_IN = 10.0;   // tag not found: move back
-    public static double NOT_FOUND_LEFT_IN = 54.0;   // tag not found: move left
+    public static double EARLY_BACK_IN = 14.0;    // move back after the first shot
+    public static double SHIFT_LEFT_IN = 12.0;    // shift left after moving back
+    public static double SECOND_MOVE_IN = 12.0;   // forward move after the shift left
+    public static double BEFORE_SHAKE_WAIT_SEC = 2.0; // wait after the forward move, before the shake
+    public static double AFTER_SHAKE_WAIT_SEC = 2.0;  // wait after the shake, before moving back
+    public static double SHAKE_IN = 4.0;          // shake distance: right this far, then left this far (done twice, with the lift wiggle in between)
+    public static double LIFT_WIGGLE = 0.03;      // right lift wiggle size during the shake (up by this, then back down)
+    public static double LIFT_WIGGLE_MS = 200.0;  // time to let the servo move at each end of the wiggle
+    public static double BACK_IN = 8.0;           // move back after the shake
+    public static double SHIFT_RIGHT_IN = 12.0;   // shift right after moving back
+    public static double FORWARD_BEFORE_SHOT_IN = 8.0; // forward move before the second shot
+    public static double SECOND_SHOT_SEC = 3.0;   // gate open, second shot
+    public static double BACK_AFTER_SHOT_IN = 8.0; // move back after the second shot
+    public static double FINAL_SHIFT_LEFT_IN = 50.0; // last sideways shift to the left
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
@@ -55,14 +66,17 @@ public class Auto2ShootPark extends LinearOpMode {
         gate.setPosition(StrikersConfig.OPEN_POSITION);
         shifter.setPosition(StrikersConfig.SHIFTER_CLOSED_POSITION);
 
-        // Right intake lift servo: UP at INIT and stays UP for the whole auto. (skipped if it is not in the robot configuration)
+        // Right intake lift servo, same as teleop: starts UP. (null if it is not in the robot configuration)
+        Servo intakeLiftRight;
         try {
-            Servo intakeLiftRight = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_RIGHT_NAME);
-            intakeLiftRight.setDirection(Servo.Direction.REVERSE);
-            intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_UP_POS);
-        } catch (Exception ignored) {
-            // no right lift servo configured
+            intakeLiftRight = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_RIGHT_NAME);
+            if (intakeLiftRight != null) {
+                intakeLiftRight.setDirection(Servo.Direction.REVERSE);
+            }
+        } catch (Exception e) {
+            intakeLiftRight = null;
         }
+        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_UP_POS);
 
         // Flywheels
         shooter1 = hardwareMap.get(DcMotorEx.class, StrikersConfig.MOTOR_1_NAME);
@@ -78,7 +92,7 @@ public class Auto2ShootPark extends LinearOpMode {
         // Vision (Limelight 3A or Logitech C270, whichever is connected)
         LimelightShooterSubsystem vision = new LimelightShooterSubsystem(hardwareMap);
 
-        telemetry.addData("Status", "Ready - 2 RED park");
+        telemetry.addData("Status", "Ready - 2 BLUE shoot flower shoot park");
         telemetry.update();
 
         waitForStart();
@@ -89,11 +103,12 @@ public class Auto2ShootPark extends LinearOpMode {
 
         double flywheelRPM = FLYWHEEL_RPM;
 
-        // Look for a RED AprilTag for up to TAG_TIMEOUT_SEC. Stops looking as soon as one is found.
+        // Look for a BLUE AprilTag for up to TAG_TIMEOUT_SEC. Stops looking as soon as one is found.
+        // The path is the same whether or not a tag is found.
         boolean tagFound = false;
         ElapsedTime tagTimer = new ElapsedTime();
         while (opModeIsActive() && tagTimer.seconds() < TAG_TIMEOUT_SEC) {
-            vision.update(true); // RED alliance AprilTags only (blue tags are ignored)
+            vision.update(false); // BLUE alliance AprilTags only (red tags are ignored)
             tagFound = vision.isTargetVisible();
             telemetry.addData("AprilTag", tagFound ? "DETECTED" : "NOT DETECTED - looking");
             telemetry.addData("Time", "%.1f / %.1f s", tagTimer.seconds(), TAG_TIMEOUT_SEC);
@@ -105,35 +120,48 @@ public class Auto2ShootPark extends LinearOpMode {
         vision.stop(); // done with the camera
         if (!opModeIsActive()) return;
 
-        runOpeningSteps(intake, gate, flywheelRPM);
-
-        if (tagFound) {
-            // ---------- Tag found ----------
-            moveAlongHeading(drive, -FOUND_BACK_IN);   // move back
-            shiftSideways(drive, FOUND_LEFT_IN);       // move left
-        } else {
-            // ---------- Tag not found ----------
-            moveAlongHeading(drive, -NOT_FOUND_BACK_IN);   // move back
-            shiftSideways(drive, NOT_FOUND_LEFT_IN);       // move left
-        }
-
-        stopEverything(drive, intake, gate);
-    }
-
-    /** Shared opening: shooter on (gate already open, intake off) -> wait -> intake on, wait (shooting) -> gate closed. */
-    private void runOpeningSteps(DcMotorEx intake, Servo gate, double flywheelRPM) {
-        // Shooter on. The gate is already open and the intake is off.
+        // Flywheel on. The gate is already open and the intake is off.
         updateFlywheel(flywheelRPM);
-
-        // Wait for the flywheel to spin up.
         holdFlywheel(flywheelRPM, SPINUP_WAIT_SEC, "Spinning up");
 
         // Intake on, then wait (gate is already open, so this is the shooting time).
         intake.setPower(StrikersConfig.INTAKE_POWER);
         holdFlywheel(flywheelRPM, SHOOT_WAIT_SEC, "Shooting (gate already open)");
 
-        // Gate closed.
+        // Close the gate.
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
+
+        moveAlongHeading(drive, -EARLY_BACK_IN);   // move back
+        shiftSideways(drive, SHIFT_LEFT_IN);       // shift left
+
+        // Right lift DOWN (same position as teleop's bumper-held DOWN).
+        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_DOWN_POS);
+
+        moveAlongHeading(drive, SECOND_MOVE_IN);   // move forward
+
+        holdFlywheel(flywheelRPM, BEFORE_SHAKE_WAIT_SEC, "Waiting before shake");
+
+        shakeWithLiftWiggle(drive, intakeLiftRight, flywheelRPM);
+
+        holdFlywheel(flywheelRPM, AFTER_SHAKE_WAIT_SEC, "Waiting after shake");
+
+        moveAlongHeading(drive, -BACK_IN);         // move back
+
+        // Right lift UP.
+        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_UP_POS);
+
+        shiftSideways(drive, -SHIFT_RIGHT_IN);     // shift right
+        moveAlongHeading(drive, FORWARD_BEFORE_SHOT_IN); // move forward
+
+        // Gate open, wait (second shot), then gate closed.
+        if (opModeIsActive()) gate.setPosition(StrikersConfig.OPEN_POSITION);
+        holdFlywheel(flywheelRPM, SECOND_SHOT_SEC, "Gate open (second shot)");
+        gate.setPosition(StrikersConfig.CLOSED_POSITION);
+
+        moveAlongHeading(drive, -BACK_AFTER_SHOT_IN); // move back
+        shiftSideways(drive, FINAL_SHIFT_LEFT_IN); // shift left
+
+        stopEverything(drive, intake, gate);
     }
 
     /** Moves along the robot's current heading: positive = forward, negative = back. */
@@ -160,6 +188,28 @@ public class Auto2ShootPark extends LinearOpMode {
                                 here.position.x - leftInches * Math.sin(heading),
                                 here.position.y + leftInches * Math.cos(heading)))
                         .build());
+    }
+
+    /** One shake: SHAKE_IN to the right, then SHAKE_IN to the left (sideways, heading held). */
+    private void shakeOnce(MecanumDrive drive) {
+        shiftSideways(drive, -SHAKE_IN); // right
+        shiftSideways(drive, SHAKE_IN);  // left
+    }
+
+    /** Shake, then move the right lift up by LIFT_WIGGLE and back down by LIFT_WIGGLE, then shake again. */
+    private void shakeWithLiftWiggle(MecanumDrive drive, Servo intakeLiftRight, double flywheelRPM) {
+        shakeOnce(drive);
+
+        if (intakeLiftRight != null && opModeIsActive()) {
+            double down = StrikersConfig.INTAKE_LIFT_DOWN_POS;
+            double upDirection = StrikersConfig.INTAKE_LIFT_UP_POS >= down ? 1.0 : -1.0;
+            intakeLiftRight.setPosition(Range.clip(down + upDirection * LIFT_WIGGLE, 0.0, 1.0)); // up by 0.02
+            holdFlywheel(flywheelRPM, LIFT_WIGGLE_MS / 1000.0, "Lift wiggle up");
+            intakeLiftRight.setPosition(down); // back to the DOWN position
+            holdFlywheel(flywheelRPM, LIFT_WIGGLE_MS / 1000.0, "Lift wiggle down");
+        }
+
+        shakeOnce(drive);
     }
 
     /** Stop everything: intake, flywheel, drive and gate. */
