@@ -19,7 +19,7 @@ import com.qualcomm.robotcore.util.Range;
 /**
  * BLUE alliance, Start 2: look for a BLUE AprilTag, then shoot twice with a move in between.
  *
- * Look for a BLUE AprilTag (up to 15 s) -> flywheel on (gate already open) -> wait 3 s
+ * Look for a BLUE AprilTag (up to 7 s) -> flywheel on (gate already open) -> wait 3 s
  *   -> intake on, wait 3 s (shooting) -> gate closed -> back 14 -> left 12 -> lift DOWN -> forward 12
  *   -> wait 1 s -> back 8 -> lift UP -> right 12 -> forward 8
  *   -> gate open, wait 3 s (second shot) -> gate closed -> back 8 -> left 50 -> stop everything.
@@ -28,7 +28,7 @@ import com.qualcomm.robotcore.util.Range;
 @Autonomous(name = "2BlueShootFlowerShootParkCamera", group = "Auto")
 public class Auto2BlueShootFlowerShootParkCamera extends LinearOpMode {
 
-    public static double TAG_TIMEOUT_SEC = 15.0;  // look for a blue AprilTag for up to this long
+    public static double TAG_TIMEOUT_SEC = 7.0;  // look for a blue AprilTag for up to this long
     private double flywheelTargetRPM = StrikersConfig.MID_BATTERY_RPM; // set from the battery at init
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
