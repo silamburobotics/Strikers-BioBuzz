@@ -21,9 +21,9 @@ import com.qualcomm.robotcore.util.Range;
  * Opening: flywheel on (gate open) -> wait 2.5 -> intake on, wait 1 -> gate closed -> back 10 -> shift right 50
  *   -> lift DOWN -> forward 8 -> wait 1 -> lift UP -> shift left 48 -> look for a RED AprilTag during that move (up to 2 s from its start).
  * Found:     gate open, wait 1 -> shift right 34 -> gate closed -> back 30 -> turn cw 90 -> lift DOWN -> forward 12
- *   -> wait 2 -> back 12 -> lift UP -> shift right 60 -> forward 12.
- * Not found: shift right 34 -> back 100 -> shift left 18 -> turn 180 -> lift DOWN -> forward 8 -> gate open, wait 2
- *   -> forward 3 -> wait 3 -> back 10 -> lift UP -> shift left 30.
+ *   -> wait 2 -> back 12 -> lift UP -> shift right 56 -> forward 16.
+ * Not found: shift right 34 -> back 100 -> shift left 20 -> turn 180 -> lift DOWN -> forward 12 -> gate open, wait 1
+ *   -> forward 4 -> wait 2 -> back 12 -> lift UP -> shift left 30.
  * Intake and flywheel run to the end. Flywheel RPM comes from the battery voltage (2860 if unreadable).
  */
 @Config
@@ -51,19 +51,19 @@ public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends Li
     public static double F_FORWARD_1_IN = 12.0;
     public static double F_WAIT_1_SEC = 2.0;
     public static double F_BACK_2_IN = 12.0;
-    public static double F_SHIFT_RIGHT_2_IN = 60.0;
-    public static double F_FORWARD_2_IN = 12.0;
+    public static double F_SHIFT_RIGHT_2_IN = 56.0;
+    public static double F_FORWARD_2_IN = 16.0;
 
     // Tag NOT found
     public static double N_SHIFT_RIGHT_IN = 34.0;
     public static double N_BACK_IN = 100.0;
-    public static double N_SHIFT_LEFT_1_IN = 18.0;
+    public static double N_SHIFT_LEFT_1_IN = 20.0;
     public static double N_TURN_DEG = 180.0;          // rotate 180 (anticlockwise)
-    public static double N_FORWARD_1_IN = 8.0;
-    public static double N_GATE_WAIT_SEC = 2.0;
-    public static double N_FORWARD_2_IN = 3.0;
-    public static double N_WAIT_SEC = 3.0;
-    public static double N_BACK_2_IN = 10.0;
+    public static double N_FORWARD_1_IN = 12.0;
+    public static double N_GATE_WAIT_SEC = 1.0;
+    public static double N_FORWARD_2_IN = 4.0;
+    public static double N_WAIT_SEC = 2.0;
+    public static double N_BACK_2_IN = 12.0;
     public static double N_SHIFT_LEFT_2_IN = 30.0;
 
     private DcMotorEx shooter1;
