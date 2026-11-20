@@ -26,7 +26,7 @@ import com.qualcomm.robotcore.util.Range;
 @Autonomous(name = "1ShootPark", group = "Auto")
 public class Auto1ShootPark extends LinearOpMode {
 
-    public static double FLYWHEEL_RPM = 2860.0;   // auto shooter speed (teleop stays separate)
+    private double flywheelTargetRPM = StrikersConfig.MID_BATTERY_RPM; // set from the battery at init
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
     public static double FIRST_RIGHT_IN = 38.0;   // first sideways move to the right
@@ -39,6 +39,8 @@ public class Auto1ShootPark extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        // Flywheel speed from battery voltage (read once at init; 2860 if unreadable)
+        flywheelTargetRPM = StrikersConfig.getBatteryAdjustedRPM(hardwareMap);
         // Drive (Road Runner + Pinpoint)
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
@@ -78,7 +80,7 @@ public class Auto1ShootPark extends LinearOpMode {
         waitForStart();
         if (isStopRequested()) return;
 
-        double flywheelRPM = FLYWHEEL_RPM;
+        double flywheelRPM = flywheelTargetRPM;
 
         runOpeningSteps(intake, gate, flywheelRPM);
 
@@ -147,7 +149,7 @@ public class Auto1ShootPark extends LinearOpMode {
     private void runWithFlywheel(Action action) {
         boolean running = true;
         while (opModeIsActive() && running) {
-            updateFlywheel(FLYWHEEL_RPM);
+            updateFlywheel(flywheelTargetRPM);
             TelemetryPacket packet = new TelemetryPacket();
             running = action.run(packet);
             FtcDashboard.getInstance().sendTelemetryPacket(packet);

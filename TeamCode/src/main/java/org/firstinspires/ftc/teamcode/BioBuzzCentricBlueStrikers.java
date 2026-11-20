@@ -140,6 +140,9 @@ public class BioBuzzCentricBlueStrikers extends LinearOpMode {
             sleep(20);
         }
 
+        // Flywheel speed from battery voltage (read once; 2860 if unreadable). Same for both shifter modes.
+        final double batteryRPM = StrikersConfig.getBatteryAdjustedRPM(hardwareMap);
+
         boolean lastIntakeAState = false;
         boolean lastIntakeBState = false;
         boolean lastShifterAState = false;
@@ -278,7 +281,7 @@ public class BioBuzzCentricBlueStrikers extends LinearOpMode {
             shooter2.setDirection(StrikersConfig.MOTOR_2_REVERSED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
 
             // Dynamic distance-based flywheel RPM calculation
-            double manualBaseRPM = isShifterOpen ? StrikersConfig.FLYWHEEL_OPEN_RPM : StrikersConfig.FLYWHEEL_CLOSED_RPM;
+            double manualBaseRPM = batteryRPM;
             double currentTargetRPM;
             if (autoAimActive && visionSubsystem.isTargetVisible()) {
                 currentTargetRPM = visionSubsystem.getFlywheelTargetRPM(isShifterOpen, manualBaseRPM);

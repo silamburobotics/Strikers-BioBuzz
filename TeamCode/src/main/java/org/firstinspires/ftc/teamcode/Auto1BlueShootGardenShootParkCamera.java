@@ -30,7 +30,7 @@ import com.qualcomm.robotcore.util.Range;
 public class Auto1BlueShootGardenShootParkCamera extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 2.0;       // look for a blue AprilTag for up to this long (after the shift left 48)
-    public static double FLYWHEEL_RPM = 2860.0;       // auto shooter speed (teleop stays separate)
+    private double flywheelTargetRPM = StrikersConfig.MID_BATTERY_RPM; // set from the battery at init
     public static double SPINUP_WAIT_SEC = 3.0;       // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 1.0;        // intake on, gate open: shooting
     public static double FIRST_BACK_IN = 8.0;                  // move back after the gate closes
@@ -51,6 +51,8 @@ public class Auto1BlueShootGardenShootParkCamera extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        // Flywheel speed from battery voltage (read once at init; 2860 if unreadable)
+        flywheelTargetRPM = StrikersConfig.getBatteryAdjustedRPM(hardwareMap);
         // Drive (Road Runner + Pinpoint)
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
@@ -99,7 +101,7 @@ public class Auto1BlueShootGardenShootParkCamera extends LinearOpMode {
             return;
         }
 
-        double flywheelRPM = FLYWHEEL_RPM;
+        double flywheelRPM = flywheelTargetRPM;
 
         // Step 1: shooter on. Gate is already open and the intake is off.
         updateFlywheel(flywheelRPM);
@@ -202,7 +204,7 @@ public class Auto1BlueShootGardenShootParkCamera extends LinearOpMode {
     private void runWithFlywheel(Action action) {
         boolean running = true;
         while (opModeIsActive() && running) {
-            updateFlywheel(FLYWHEEL_RPM);
+            updateFlywheel(flywheelTargetRPM);
             TelemetryPacket packet = new TelemetryPacket();
             running = action.run(packet);
             FtcDashboard.getInstance().sendTelemetryPacket(packet);

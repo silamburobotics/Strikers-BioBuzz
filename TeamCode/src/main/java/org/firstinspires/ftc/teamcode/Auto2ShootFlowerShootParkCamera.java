@@ -29,7 +29,7 @@ import com.qualcomm.robotcore.util.Range;
 public class Auto2ShootFlowerShootParkCamera extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 15.0;  // look for a red AprilTag for up to this long
-    public static double FLYWHEEL_RPM = 2860.0;   // auto shooter speed (teleop stays separate)
+    private double flywheelTargetRPM = StrikersConfig.MID_BATTERY_RPM; // set from the battery at init
     public static double SPINUP_WAIT_SEC = 3.0;   // flywheel on, gate already open, intake off
     public static double SHOOT_WAIT_SEC = 3.0;    // intake on, gate open: shooting
     public static double EARLY_BACK_IN = 14.0;    // move back after the first shot
@@ -53,6 +53,8 @@ public class Auto2ShootFlowerShootParkCamera extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        // Flywheel speed from battery voltage (read once at init; 2860 if unreadable)
+        flywheelTargetRPM = StrikersConfig.getBatteryAdjustedRPM(hardwareMap);
         // Drive (Road Runner + Pinpoint)
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
 
@@ -101,7 +103,7 @@ public class Auto2ShootFlowerShootParkCamera extends LinearOpMode {
             return;
         }
 
-        double flywheelRPM = FLYWHEEL_RPM;
+        double flywheelRPM = flywheelTargetRPM;
 
         // Look for a RED AprilTag for up to TAG_TIMEOUT_SEC. Stops looking as soon as one is found.
         // The path is the same whether or not a tag is found.
@@ -228,7 +230,7 @@ public class Auto2ShootFlowerShootParkCamera extends LinearOpMode {
     private void runWithFlywheel(Action action) {
         boolean running = true;
         while (opModeIsActive() && running) {
-            updateFlywheel(FLYWHEEL_RPM);
+            updateFlywheel(flywheelTargetRPM);
             TelemetryPacket packet = new TelemetryPacket();
             running = action.run(packet);
             FtcDashboard.getInstance().sendTelemetryPacket(packet);
