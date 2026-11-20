@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 /**
@@ -28,6 +29,7 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
 
     // State variables
     private boolean isIntakeLiftUp = true;               // Default UP position
+    private final ElapsedTime gateOpenTimer = new ElapsedTime();
     private boolean isGateOpen = false;                 // false = Closed, true = Open
     private boolean isShifterOpen = false;              // false = Closed, true = Open
     private double targetTurretAngle = 0.0;             // Target angle in degrees (-90.0 to +90.0)
@@ -36,7 +38,7 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
 
     // Hardcoded RED Alliance
     private final boolean isRedAlliance = true;
-    private boolean autoAimActive = true;
+    private boolean autoAimActive = false; // OFF by default
 
     // Vision Subsystem
     private LimelightShooterSubsystem visionSubsystem;
@@ -81,16 +83,18 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
 
         try {
             intakeLiftRight = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_RIGHT_NAME);
+            if (intakeLiftRight != null) {
+                intakeLiftRight.setDirection(Servo.Direction.REVERSE);
+            }
         } catch (Exception e) {
             intakeLiftRight = null;
         }
 
         // Set initial intake lift position to UP by default
         isIntakeLiftUp = true;
-        double initLeftPos = StrikersConfig.INTAKE_LIFT_UP_POS;
-        double initRightPos = StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS;
-        if (intakeLiftLeft != null) intakeLiftLeft.setPosition(initLeftPos);
-        if (intakeLiftRight != null) intakeLiftRight.setPosition(initRightPos);
+        double initPos = StrikersConfig.INTAKE_LIFT_UP_POS;
+        if (intakeLiftLeft != null) intakeLiftLeft.setPosition(initPos);
+        if (intakeLiftRight != null) intakeLiftRight.setPosition(initPos);
 
         // 3. Axon Gate & Shifter Servos
         Servo axonGateServo = hardwareMap.get(Servo.class, StrikersConfig.GATE_SERVO);
@@ -128,7 +132,7 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
             telemetry.addData("Status", "Initialized RED ALLIANCE STRIKERS Program!");
             telemetry.addData("Camera Hardware", visionSubsystem.getCameraName());
             telemetry.addData("Active Alliance", "RED ALLIANCE (Tags 31, 32, 35, 36)");
-            telemetry.addData("Intake Lift State", "DEFAULT UP (Left: %.2f | Right: %.2f)", StrikersConfig.INTAKE_LIFT_UP_POS, initRightPos);
+            telemetry.addData("Intake Lift State", "DEFAULT UP (Left: %.2f | Right opposite: %.2f)", StrikersConfig.INTAKE_LIFT_UP_POS, 1.0 - StrikersConfig.INTAKE_LIFT_UP_POS);
             telemetry.addData("Gate State", "CLOSED (%.2f)", StrikersConfig.CLOSED_POSITION);
             telemetry.addData("Shifter State", "CLOSED (%.2f)", StrikersConfig.SHIFTER_CLOSED_POSITION);
             telemetry.addData("Turret State", "CENTER HOME (0°)");
@@ -145,20 +149,32 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            // Update Limelight Vision Subsystem filtered strictly by RED alliance tags (31, 32, 35, 36)
-            // Camera/AprilTag processing only runs while auto-aim is engaged (R1 toggle or L1 held) to save CPU
-            boolean visionNeeded = autoAimActive || gamepad2.left_bumper;
-            visionSubsystem.setCameraActive(visionNeeded);
-            if (visionNeeded) {
+            // --- Auto-Aim Controls (Gamepad 2: Right Bumper / G2.RB = Toggle ON/OFF, Left Bumper / G2.LB = Hold-to-Aim) ---
+            if (gamepad2.right_bumper && !lastAutoAimRBState) {
+                autoAimActive = !autoAimActive;
+                if (!autoAimActive) {
+                    visionSubsystem.resetLock();
+                }
+            }
+            lastAutoAimRBState = gamepad2.right_bumper;
+
+            // Active if toggled ON via G2.RB OR held down via G2.LB
+            boolean isAutoAimEngaged = autoAimActive || gamepad2.left_bumper;
+
+            // Update Limelight Vision Subsystem: Camera stream & AprilTag processing ONLY run while auto-aim is engaged (saves CPU & battery)
+            visionSubsystem.setCameraActive(isAutoAimEngaged);
+            if (isAutoAimEngaged) {
                 visionSubsystem.update(isRedAlliance);
+            } else {
+                visionSubsystem.resetLock();
             }
 
             // ==========================================
-            // GAMEPAD 1: MECANUM DRIVE & INTAKE
+            // GAMEPAD 1: MECANUM DRIVE & INTAKE (Gamepad 1 ONLY)
             // ==========================================
-            double y = -gamepad1.left_stick_y;    // Forward / Backward (Left Stick Y)
-            double x = gamepad1.left_stick_x;     // Strafe Left / Right (Left Stick X)
-            double rx = StrikersConfig.INVERT_TURN_JOYSTICK ? -gamepad1.right_stick_x : gamepad1.right_stick_x;  // Turn Left / Right
+            double y = StrikersConfig.INVERT_DRIVE_Y ? gamepad1.left_stick_y : -gamepad1.left_stick_y;
+            double x = StrikersConfig.INVERT_STRAFE_X ? -gamepad1.left_stick_x : gamepad1.left_stick_x;
+            double rx = StrikersConfig.INVERT_TURN_JOYSTICK ? -gamepad1.right_stick_x : gamepad1.right_stick_x;
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1.0);
             double leftFrontPower = ((y + x + rx) / denominator) * StrikersConfig.DRIVE_POWER_SCALE;
@@ -197,23 +213,33 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
             // --- Synchronized Dual Intake Lift Servos Control (Gamepad 1 - Left Bumper: hold = DOWN, release = UP) ---
             isIntakeLiftUp = !gamepad1.left_bumper; // Hold left bumper = arms DOWN, release = arms UP
 
-            double targetLeftLiftPos = isIntakeLiftUp ? StrikersConfig.INTAKE_LIFT_UP_POS : StrikersConfig.INTAKE_LIFT_DOWN_POS;
-            double targetRightLiftPos = isIntakeLiftUp ? StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS : StrikersConfig.INTAKE_LIFT_RIGHT_DOWN_POS;
+            double targetLiftPos = isIntakeLiftUp ? StrikersConfig.INTAKE_LIFT_UP_POS : StrikersConfig.INTAKE_LIFT_DOWN_POS;
 
             if (intakeLiftLeft != null) {
-                intakeLiftLeft.setPosition(targetLeftLiftPos);
+                intakeLiftLeft.setPosition(targetLiftPos);
             }
             if (intakeLiftRight != null) {
-                intakeLiftRight.setPosition(targetRightLiftPos);
+                intakeLiftRight.setPosition(targetLiftPos);
             }
 
             // ==========================================
             // GAMEPAD 2: GATE, SHIFTER & SHOOTER
             // ==========================================
 
-            // --- Axon Gate Servo (G2.B held = Open, released = Closed) ---
+            // --- Axon Gate Servo (hold G2.B = Open, release = Close; G2.X does nothing) ---
+            boolean wasGateOpen = isGateOpen;
             isGateOpen = gamepad2.b;
-            double targetGatePos = isGateOpen ? StrikersConfig.OPEN_POSITION : StrikersConfig.CLOSED_POSITION;
+            if (isGateOpen && !wasGateOpen) {
+                gateOpenTimer.reset(); // gate just started opening: begin the kick
+            }
+            double targetGatePos;
+            if (!isGateOpen) {
+                targetGatePos = StrikersConfig.CLOSED_POSITION;
+            } else if (gateOpenTimer.milliseconds() < StrikersConfig.GATE_KICK_MS) {
+                targetGatePos = StrikersConfig.GATE_KICK_POSITION; // opens to the kick position first...
+            } else {
+                targetGatePos = StrikersConfig.OPEN_POSITION;      // ...then comes back to the open position
+            }
             axonGateServo.setPosition(targetGatePos);
 
             // --- Shifter Servo (Gamepad 2: Button A = Toggle Open / Closed) ---
@@ -225,19 +251,6 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
             double targetShifterPos = isShifterOpen ? StrikersConfig.SHIFTER_OPEN_POSITION : StrikersConfig.SHIFTER_CLOSED_POSITION;
             shifterServo.setPosition(targetShifterPos);
 
-            // --- Auto-Aim Controls (Gamepad 2: R1 / Right Bumper = Toggle ON/OFF, L1 / Left Bumper = Hold-to-Aim) ---
-            if (gamepad2.right_bumper && !lastAutoAimRBState) {
-                autoAimActive = !autoAimActive;
-                if (!autoAimActive) {
-                    visionSubsystem.resetLock();
-                    targetTurretAngle = 0.0; // Return turret to 0° (center home) when G2.R1 toggle is turned OFF
-                }
-            }
-            lastAutoAimRBState = gamepad2.right_bumper;
-
-            // Active if toggled ON via G2.R1 OR held down via G2.L1
-            boolean isAutoAimEngaged = autoAimActive || gamepad2.left_bumper;
-
             // --- Turret Auto-Aim to AprilTag when active, otherwise Center Home (0.0°) ---
             double ticksPerDegree = (StrikersConfig.TURRET_TICKS_PER_REV * StrikersConfig.TURRET_GEAR_RATIO) / 360.0;
             double currentTurretAngle = turret.getCurrentPosition() / ticksPerDegree;
@@ -246,17 +259,14 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
                 if (Math.abs(visionSubsystem.getTxError()) > LimelightShooterSubsystem.AIM_DEADBAND_DEG) {
                     targetTurretAngle = visionSubsystem.getTurretTargetAngle(currentTurretAngle);
                 }
-            } else if (gamepad2.dpad_down) {
-                targetTurretAngle = 0.0; // Manual center home reset via G2.DPad-Down
+            } else {
+                targetTurretAngle = 0.0; // Center home position when target is not visible or auto-aim is OFF
             }
             targetTurretAngle = Range.clip(targetTurretAngle, -StrikersConfig.TURRET_MAX_ANGLE_DEG, StrikersConfig.TURRET_MAX_ANGLE_DEG);
 
             int targetTurretTicks = (int) Math.round(targetTurretAngle * ticksPerDegree);
             turret.setTargetPosition(targetTurretTicks);
             turret.setPower(StrikersConfig.TURRET_MAX_POWER);
-
-            double maxTurretVelocity = StrikersConfig.TURRET_MAX_VELOCITY_DEG_PER_SEC * ticksPerDegree;
-            turret.setVelocity(maxTurretVelocity);
 
             // --- Shooter Flywheel Control (Gamepad 2: Y = Toggle ON/OFF) ---
             if (gamepad2.y && !lastShooterYState) {
@@ -301,8 +311,8 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
             telemetry.addData("Mecanum Drive Powers", "LF:%.2f LB:%.2f RF:%.2f RB:%.2f",
                     leftFrontPower, leftBackPower, rightFrontPower, rightBackPower);
             telemetry.addData("Intake Motor (G1.A/B)", "%s (%.2f)", intakeMode.name(), intakePower);
-            telemetry.addData("Intake Lift Arms (G1.LB)", isIntakeLiftUp ? "UP (L:%.2f | R:%.2f)" : "DOWN (L:%.2f | R:%.2f)",
-                    targetLeftLiftPos, targetRightLiftPos);
+            telemetry.addData("Intake Lift Arms (G1.LB)", isIntakeLiftUp ? "UP (L:%.2f | R opposite:%.2f)" : "DOWN (L:%.2f | R opposite:%.2f)",
+                    targetLiftPos, 1.0 - targetLiftPos);
 
             telemetry.addData("--- Vision & Shooter Status ---", "");
             telemetry.addData("AprilTags in View", visionSubsystem.getTagsSeenSummary());
@@ -315,7 +325,7 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
                 telemetry.addData("Limelight Target", "[SEARCHING] Looking for RED tags (31, 32, 35, 36)...");
             }
 
-            telemetry.addData("Turret Auto-Aim", "G2.R1 Toggle: %s | G2.L1 Hold: %s (Status: %s)",
+            telemetry.addData("Turret Auto-Aim", "G2.RB Toggle: %s | G2.LB Hold: %s (Status: %s)",
                     autoAimActive ? "ON" : "OFF",
                     gamepad2.left_bumper ? "HELD" : "RELEASED",
                     isAutoAimEngaged ? "ACTIVE" : "OFF (Center Home)");

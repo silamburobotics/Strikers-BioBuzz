@@ -58,7 +58,8 @@ public class Auto2ShootPark extends LinearOpMode {
         // Right intake lift servo: UP at INIT and stays UP for the whole auto. (skipped if it is not in the robot configuration)
         try {
             Servo intakeLiftRight = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_RIGHT_NAME);
-            intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS);
+            intakeLiftRight.setDirection(Servo.Direction.REVERSE);
+            intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_UP_POS);
         } catch (Exception ignored) {
             // no right lift servo configured
         }

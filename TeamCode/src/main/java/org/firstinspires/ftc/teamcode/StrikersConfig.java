@@ -15,6 +15,8 @@ public class StrikersConfig {
     public static String RIGHT_FRONT_NAME = "rightFront";
     public static String RIGHT_BACK_NAME = "rightBack";
     public static double DRIVE_POWER_SCALE = 1.0;
+    public static boolean INVERT_DRIVE_Y = false;        // Standard drive direction (Push Up = Forward)
+    public static boolean INVERT_STRAFE_X = false;       // Standard strafe direction (Push Right = Strafe Right)
     public static boolean INVERT_TURN_JOYSTICK = false; // Reversed turning (rx = right_stick_x)
 
     // --- Intake Motor & Dual Synchronized Lift Servos ---
@@ -22,15 +24,15 @@ public class StrikersConfig {
     public static double INTAKE_POWER = 1.0;
     public static String INTAKE_LIFT_LEFT_NAME = "intakeLiftLeft";
     public static String INTAKE_LIFT_RIGHT_NAME = "intakeLiftRight";
-    public static double INTAKE_LIFT_UP_POS = 0.40;       // UP height position
-    public static double INTAKE_LIFT_DOWN_POS = 0.80;     // DOWN height position
-    public static double INTAKE_LIFT_RIGHT_UP_POS = 0.74;   // Right lift servo UP position (used directly, not mirrored)
-    public static double INTAKE_LIFT_RIGHT_DOWN_POS = 0.345; // Right lift servo DOWN position (used directly, not mirrored)
+    public static double INTAKE_LIFT_UP_POS = 0.78;       // Shared UP height position (Right servo automatically mirrored)
+    public static double INTAKE_LIFT_DOWN_POS = 0.375;     // Shared DOWN height position (Right servo automatically mirrored)
 
     // --- Axon Gate & Shifter Servos ---
     public static String GATE_SERVO = "gateServo";
     public static double OPEN_POSITION = 0.4;             // Gate Open position
     public static double CLOSED_POSITION = 0.7;           // Gate Closed position
+    public static double GATE_KICK_POSITION = 0.4;        // When the gate opens it first goes here...
+    public static double GATE_KICK_MS = 200.0;            // ...for this many ms, then comes back to OPEN_POSITION
 
     public static String SHIFTER_SERVO = "shifterServo";
     public static double SHIFTER_OPEN_POSITION = 0.25;    // Shifter Open position (Nectar)
@@ -51,6 +53,7 @@ public class StrikersConfig {
     public static double FLYWHEEL_OPEN_RPM = 2575.0;     // Manual RPM when shifter is OPEN / Nectar mode
     public static double FLYWHEEL_CLOSED_RPM = 2400.0;   // Manual RPM when shifter is CLOSED / Pollen mode
     public static double TICKS_PER_REV = 28.0;         // GoBILDA 6000 RPM motor encoder resolution
+    public static boolean MOTOR_1_REVERSED = false;    // Set true if motor 1 spins opposite
     public static boolean MOTOR_2_REVERSED = true;     // Set true if motor 2 spins opposite to motor 1
     public static boolean FLYWHEEL_ENABLED = false;    // Toggle flywheel motors ON/OFF
 }

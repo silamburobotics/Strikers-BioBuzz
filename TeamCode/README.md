@@ -10,8 +10,6 @@ On the REV Driver Station drop-down menu, select the OpMode corresponding to you
 
 | Team | Alliance | OpMode Name | File Path |
 | :--- | :--- | :--- | :--- |
-| **Warriors** | **Blue Alliance** | `BioBuzz Centric BLUE Warriors` | [`BioBuzzCentricBlueWarriors.java`](file:///Users/karthiksadhasivam/Projects/FtcRobotController/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/BioBuzzCentricBlueWarriors.java) |
-| **Warriors** | **Red Alliance** | `BioBuzz Centric RED Warriors` | [`BioBuzzCentricRedWarriors.java`](file:///Users/karthiksadhasivam/Projects/FtcRobotController/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/BioBuzzCentricRedWarriors.java) |
 | **Strikers** | **Blue Alliance** | `BioBuzz Centric BLUE Strikers` | [`BioBuzzCentricBlueStrikers.java`](file:///Users/karthiksadhasivam/Projects/FtcRobotController/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/BioBuzzCentricBlueStrikers.java) |
 | **Strikers** | **Red Alliance** | `BioBuzz Centric RED Strikers` | [`BioBuzzCentricRedStrikers.java`](file:///Users/karthiksadhasivam/Projects/FtcRobotController/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/BioBuzzCentricRedStrikers.java) |
 

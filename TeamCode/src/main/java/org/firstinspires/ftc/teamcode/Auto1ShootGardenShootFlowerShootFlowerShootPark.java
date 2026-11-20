@@ -74,10 +74,13 @@ public class Auto1ShootGardenShootFlowerShootFlowerShootPark extends LinearOpMod
         Servo intakeLiftRight;
         try {
             intakeLiftRight = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_RIGHT_NAME);
+            if (intakeLiftRight != null) {
+                intakeLiftRight.setDirection(Servo.Direction.REVERSE);
+            }
         } catch (Exception e) {
             intakeLiftRight = null;
         }
-        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS);
+        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_UP_POS);
 
         // Flywheels
         shooter1 = hardwareMap.get(DcMotorEx.class, StrikersConfig.MOTOR_1_NAME);
@@ -128,14 +131,14 @@ public class Auto1ShootGardenShootFlowerShootFlowerShootPark extends LinearOpMod
         gate.setPosition(StrikersConfig.CLOSED_POSITION);         // 14. gate closed
 
         // 15. Right lift DOWN (same position as teleop's bumper-held DOWN).
-        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_RIGHT_DOWN_POS);
+        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_DOWN_POS);
 
         moveAlongHeading(drive, FORWARD_2_IN);                    // 16. forward
         shakeWithLiftWiggle(drive, intakeLiftRight, flywheelRPM); // 17. shake with lift wiggle
         moveAlongHeading(drive, -BACK_3_IN);                      // 18. back
 
         // 19. Right lift UP.
-        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS);
+        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_UP_POS);
 
         turnDegrees(drive, TURN_ANTICLOCKWISE_DEG);              // 20. turn anticlockwise
         moveAlongHeading(drive, -BACK_4_IN);                      // 21. drive back
@@ -206,8 +209,8 @@ public class Auto1ShootGardenShootFlowerShootFlowerShootPark extends LinearOpMod
         shakeOnce(drive);
 
         if (intakeLiftRight != null && opModeIsActive()) {
-            double down = StrikersConfig.INTAKE_LIFT_RIGHT_DOWN_POS;
-            double upDirection = StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS >= down ? 1.0 : -1.0;
+            double down = StrikersConfig.INTAKE_LIFT_DOWN_POS;
+            double upDirection = StrikersConfig.INTAKE_LIFT_UP_POS >= down ? 1.0 : -1.0;
             intakeLiftRight.setPosition(Range.clip(down + upDirection * LIFT_WIGGLE, 0.0, 1.0)); // up by LIFT_WIGGLE
             holdFlywheel(flywheelRPM, LIFT_WIGGLE_MS / 1000.0, "Lift wiggle up");
             intakeLiftRight.setPosition(down); // back to the DOWN position

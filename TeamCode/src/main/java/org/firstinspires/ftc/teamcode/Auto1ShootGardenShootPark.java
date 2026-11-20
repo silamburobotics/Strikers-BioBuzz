@@ -64,10 +64,13 @@ public class Auto1ShootGardenShootPark extends LinearOpMode {
         Servo intakeLiftRight;
         try {
             intakeLiftRight = hardwareMap.get(Servo.class, StrikersConfig.INTAKE_LIFT_RIGHT_NAME);
+            if (intakeLiftRight != null) {
+                intakeLiftRight.setDirection(Servo.Direction.REVERSE);
+            }
         } catch (Exception e) {
             intakeLiftRight = null;
         }
-        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_RIGHT_UP_POS);
+        if (intakeLiftRight != null) intakeLiftRight.setPosition(StrikersConfig.INTAKE_LIFT_UP_POS);
 
         // Flywheels
         shooter1 = hardwareMap.get(DcMotorEx.class, StrikersConfig.MOTOR_1_NAME);
