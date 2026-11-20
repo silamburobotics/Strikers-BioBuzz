@@ -20,8 +20,8 @@ import com.qualcomm.robotcore.util.Range;
  * BLUE alliance, Start 2: look for a BLUE AprilTag, then shoot twice with a shake in between.
  *
  * Look for a BLUE AprilTag (up to 15 s) -> flywheel on (gate already open) -> wait 3 s
- *   -> intake on, wait 3 s (shooting) -> gate closed -> back 14 -> left 12 -> lift DOWN -> forward 12 -> wait 2 s
- *   -> shake (with lift wiggle) -> wait 2 s -> back 8 -> lift UP -> right 12 -> forward 8
+ *   -> intake on, wait 3 s (shooting) -> gate closed -> back 14 -> left 12 -> lift DOWN -> forward 12
+ *   -> shake (with lift wiggle) -> wait 1 s -> back 8 -> lift UP -> right 12 -> forward 8
  *   -> gate open, wait 3 s (second shot) -> gate closed -> back 8 -> left 50 -> stop everything.
  */
 @Config
@@ -35,8 +35,7 @@ public class Auto2BlueShootFlowerShootParkCamera extends LinearOpMode {
     public static double EARLY_BACK_IN = 14.0;    // move back after the first shot
     public static double SHIFT_LEFT_IN = 12.0;    // shift left after moving back
     public static double SECOND_MOVE_IN = 12.0;   // forward move after the shift left
-    public static double BEFORE_SHAKE_WAIT_SEC = 2.0; // wait after the forward move, before the shake
-    public static double AFTER_SHAKE_WAIT_SEC = 2.0;  // wait after the shake, before moving back
+    public static double AFTER_SHAKE_WAIT_SEC = 1.0;  // wait after the shake, before moving back
     public static double SHAKE_IN = 4.0;          // shake distance: right this far, then left this far (done twice, with the lift wiggle in between)
     public static double LIFT_WIGGLE = 0.03;      // right lift wiggle size during the shake (up by this, then back down)
     public static double LIFT_WIGGLE_MS = 200.0;  // time to let the servo move at each end of the wiggle
@@ -141,7 +140,6 @@ public class Auto2BlueShootFlowerShootParkCamera extends LinearOpMode {
 
         moveAlongHeading(drive, SECOND_MOVE_IN);   // move forward
 
-        holdFlywheel(flywheelRPM, BEFORE_SHAKE_WAIT_SEC, "Waiting before shake");
 
         shakeWithLiftWiggle(drive, intakeLiftRight, flywheelRPM);
 
