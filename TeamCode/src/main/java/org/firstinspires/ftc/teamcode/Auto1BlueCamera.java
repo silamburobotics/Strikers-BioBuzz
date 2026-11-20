@@ -28,8 +28,8 @@ import com.qualcomm.robotcore.util.Range;
  * Intake and flywheel run to the end. Flywheel RPM comes from the battery voltage (2860 if unreadable).
  */
 @Config
-@Autonomous(name = "1BlueShootGardenShootFlowerShootFlowerShootParkCamera", group = "Auto")
-public class Auto1BlueShootGardenShootFlowerShootFlowerShootParkCamera extends LinearOpMode {
+@Autonomous(name = "1BlueCamera", group = "Auto")
+public class Auto1BlueCamera extends LinearOpMode {
 
     private double flywheelTargetRPM = StrikersConfig.MID_BATTERY_RPM; // set from the battery at init
 
