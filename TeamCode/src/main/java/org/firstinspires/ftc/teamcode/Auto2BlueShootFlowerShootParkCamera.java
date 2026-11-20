@@ -40,6 +40,7 @@ public class Auto2BlueShootFlowerShootParkCamera extends LinearOpMode {
     public static double SHIFT_RIGHT_IN = 12.0;   // shift right after moving back
     public static double FORWARD_BEFORE_SHOT_IN = 8.0; // forward move before the second shot
     public static double SECOND_SHOT_SEC = 3.0;   // gate open, second shot
+    public static double SECOND_SHOT_RPM_REDUCTION = 50.0; // flywheel RPM lowered by this much from the second gate open onward
     public static double BACK_AFTER_SHOT_IN = 8.0; // move back after the second shot
     public static double FINAL_SHIFT_LEFT_IN = 50.0; // last sideways shift to the left
 
@@ -148,6 +149,9 @@ public class Auto2BlueShootFlowerShootParkCamera extends LinearOpMode {
         moveAlongHeading(drive, FORWARD_BEFORE_SHOT_IN); // move forward
 
         // Gate open, wait (second shot), then gate closed.
+        // Second shot: flywheel runs SECOND_SHOT_RPM_REDUCTION slower, for the rest of the auto.
+        flywheelTargetRPM -= SECOND_SHOT_RPM_REDUCTION;
+        flywheelRPM = flywheelTargetRPM;
         if (opModeIsActive()) gate.setPosition(StrikersConfig.OPEN_POSITION);
         holdFlywheel(flywheelRPM, SECOND_SHOT_SEC, "Gate open (second shot)");
         gate.setPosition(StrikersConfig.CLOSED_POSITION);
