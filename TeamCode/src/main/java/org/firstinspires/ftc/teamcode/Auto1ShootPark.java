@@ -8,6 +8,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -24,6 +25,7 @@ import com.qualcomm.robotcore.util.Range;
  */
 @Config
 @Autonomous(name = "1ShootPark", group = "Auto")
+@Disabled
 public class Auto1ShootPark extends LinearOpMode {
 
     private double flywheelTargetRPM = StrikersConfig.MID_BATTERY_RPM; // set from the battery at init

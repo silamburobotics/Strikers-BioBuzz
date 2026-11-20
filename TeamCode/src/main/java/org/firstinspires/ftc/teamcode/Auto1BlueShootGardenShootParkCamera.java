@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -27,6 +28,7 @@ import com.qualcomm.robotcore.util.Range;
  */
 @Config
 @Autonomous(name = "1BlueShootGardenShootParkCamera", group = "Auto")
+@Disabled
 public class Auto1BlueShootGardenShootParkCamera extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 2.0;       // look for a blue AprilTag for up to this long (after the shift left 48)
