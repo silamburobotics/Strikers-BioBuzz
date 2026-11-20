@@ -19,12 +19,12 @@ import com.qualcomm.robotcore.util.Range;
  * RED alliance, Start 1: shoot, move, look for a RED AprilTag, then run the Tag Found or Tag Not Found path.
  *
  * Opening: flywheel on (gate open) -> wait 2.5 -> intake on, wait 1 -> gate closed -> back 10 -> shift right 50
- *   -> lift DOWN -> forward 8 -> wait 1 -> lift UP -> shift left 48 -> look for a RED AprilTag during that move (up to 2 s from its start).
+ *   -> lift DOWN -> forward 8 -> wait 1 -> lift UP -> stop intake -> shift left 48 -> start intake -> look for a RED AprilTag during that move (up to 2 s from its start).
  * Found:     gate open, wait 1 -> shift right 34 -> gate closed -> back 30 -> turn cw 90 -> lift DOWN -> forward 12
  *   -> wait 2 -> back 12 -> lift UP -> shift right 50 -> forward 16.
  * Not found: shift right 34 -> back 100 -> shift left 20 -> turn 180 -> lift DOWN -> forward 12 -> flywheel -50 RPM -> gate open, wait 1
  *   -> forward 6 -> wait 2 -> back 20 -> lift UP -> turn cw 80 -> back 30.
- * The turret auto-aims at the RED AprilTag whenever it is visible (holds its last angle if not). Turret must start centered.
+ * The turret auto-aims at the MIDDLE of the red LEFT (31,32) and RIGHT (35,36) tag sets when both are visible (holds its last angle if not). Turret must start centered.
  * Intake and flywheel run to the end. Flywheel RPM comes from the battery voltage (2860 if unreadable).
  */
 @Config
@@ -34,6 +34,7 @@ public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends Li
     private double flywheelTargetRPM = StrikersConfig.MID_BATTERY_RPM; // set from the battery at init
 
     public static double TAG_TIMEOUT_SEC = 2.0;       // look for a red AprilTag for up to this long
+    public static boolean AIM_AT_MIDPOINT = true;     // aim between the LEFT and RIGHT red tag sets (false = aim at the single closest tag)
     public static boolean AUTO_AIM_ENABLED = true;    // turret auto-aims at the RED AprilTag whenever it is visible (set false to disable)
 
     // Opening (both outcomes)
@@ -160,10 +161,12 @@ public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends Li
         moveAlongHeading(drive, OPEN_FORWARD_IN);                             // 8. forward
         holdFlywheel(rpm, OPEN_WAIT_SEC, "Waiting");                          // 9. wait
         liftUp(intakeLiftRight);                                              // 10. right lift UP
+        intake.setPower(0.0);                                                 //     stop intake
         // 11. shift left, looking for the RED AprilTag WHILE driving (the search window starts now).
         ElapsedTime tagTimer = new ElapsedTime();
         searchingTag = true;
         shiftSideways(drive, OPEN_SHIFT_LEFT_IN);
+        if (opModeIsActive()) intake.setPower(StrikersConfig.INTAKE_POWER); // start intake
 
         // ---------- Keep looking for a RED AprilTag if it was not seen during the move ----------
         // The total search window is TAG_TIMEOUT_SEC from the start of the shift left, so no extra wait if the move took longer.
@@ -172,6 +175,7 @@ public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends Li
             telemetry.addData("AprilTag", tagFound ? "DETECTED" : "NOT DETECTED - looking");
             telemetry.addData("Time", "%.1f / %.1f s", tagTimer.seconds(), TAG_TIMEOUT_SEC);
             telemetry.addData("Tags seen", vision.getTagsSeenSummary());
+            telemetry.addData("Tag sets seen", vision.getTagSetSummary());
             telemetry.update();
             if (tagFound) break;
             sleep(20);
@@ -297,8 +301,8 @@ public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends Li
     }
 
     /**
-     * Updates the camera (RED tags only) and points the turret at the tag when it is visible, like teleop auto-aim.
-     * If the tag is not visible the turret HOLDS its last angle (it does not re-center).
+     * Updates the camera (RED tags only) and points the turret between the LEFT and RIGHT tag sets (AIM_AT_MIDPOINT),
+     * or at the single closest tag. If it cannot aim (tags not visible, or only one set visible) the turret HOLDS its last angle.
      * During the search window it also latches tagFound.
      */
     private void updateAim() {
@@ -310,7 +314,12 @@ public class Auto1RedShootGardenShootFlowerShootFlowerShootParkCamera extends Li
         if (!AUTO_AIM_ENABLED || turret == null) return;
         double ticksPerDegree = (StrikersConfig.TURRET_TICKS_PER_REV * StrikersConfig.TURRET_GEAR_RATIO) / 360.0;
         double currentAngle = turret.getCurrentPosition() / ticksPerDegree;
-        if (visible && Math.abs(vision.getTxError()) > LimelightShooterSubsystem.AIM_DEADBAND_DEG) {
+        if (AIM_AT_MIDPOINT) {
+            // Aim at the middle of the LEFT and RIGHT tag sets. If only one set is visible, hold the last angle.
+            if (vision.hasBothTagSets()) {
+                targetTurretAngle = vision.getTurretTargetAngleToMidpoint(currentAngle);
+            }
+        } else if (visible && Math.abs(vision.getTxError()) > LimelightShooterSubsystem.AIM_DEADBAND_DEG) {
             targetTurretAngle = vision.getTurretTargetAngle(currentAngle);
         }
         targetTurretAngle = Range.clip(targetTurretAngle, -StrikersConfig.TURRET_MAX_ANGLE_DEG, StrikersConfig.TURRET_MAX_ANGLE_DEG);

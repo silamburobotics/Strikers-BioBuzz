@@ -85,6 +85,10 @@ public class LimelightShooterSubsystem {
     private int detectedTagId = -1;
     private String tagsSeenSummary = "None";
 
+    // Tag-set midpoint state (used only by autos that aim between the LEFT and RIGHT tag sets; teleop is not affected)
+    private double leftSetTxSum = 0.0, rightSetTxSum = 0.0;
+    private int leftSetCount = 0, rightSetCount = 0;
+
     // Target Lock-On State
     private int lockedTagId = -1;
     private boolean targetLocked = false;
@@ -204,6 +208,7 @@ public class LimelightShooterSubsystem {
      */
     public void update(boolean isRedAlliance) {
         targetVisible = false;
+        leftSetTxSum = 0.0; rightSetTxSum = 0.0; leftSetCount = 0; rightSetCount = 0;
 
         if (activeCameraType == CameraType.LIMELIGHT_3A) {
             updateLimelight(isRedAlliance);
@@ -238,6 +243,11 @@ public class LimelightShooterSubsystem {
 
             if (fiducials != null && !fiducials.isEmpty()) {
                 LLResultTypes.FiducialResult matchedFiducial = null;
+
+                // 0. Collect the horizontal angle of every visible tag in the LEFT and RIGHT sets (for the midpoint aim)
+                for (LLResultTypes.FiducialResult fiducial : fiducials) {
+                    addSetTx(fiducial.getFiducialId(), isRedAlliance, fiducial.getTargetXDegrees());
+                }
 
                 // 1. Lock persistence
                 if (lockedTagId != -1 && isAllianceTag(lockedTagId, isRedAlliance)) {
@@ -384,6 +394,13 @@ public class LimelightShooterSubsystem {
 
             tagsSeenSummary = seenTags.length() > 0 ? seenTags.toString() : "None";
 
+            // Collect the horizontal angle of every visible tag in the LEFT and RIGHT sets (for the midpoint aim)
+            for (AprilTagDetection detection : currentDetections) {
+                if (detection instanceof AprilTagSingleDetection && detection.ftcPose != null) {
+                    addSetTx(((AprilTagSingleDetection) detection).id, isRedAlliance, detection.ftcPose.bearing);
+                }
+            }
+
             // 3. Process matched tag
             if (matchedDetection != null) {
                 targetVisible = true;
@@ -471,6 +488,54 @@ public class LimelightShooterSubsystem {
 
     public int getDetectedTagId() {
         return detectedTagId;
+    }
+
+    private static boolean isLeftSetTag(int id, boolean isRedAlliance) {
+        return isRedAlliance ? (id == 31 || id == 32) : (id == 39 || id == 40);
+    }
+
+    private static boolean isRightSetTag(int id, boolean isRedAlliance) {
+        return isRedAlliance ? (id == 35 || id == 36) : (id == 43 || id == 44);
+    }
+
+    private void addSetTx(int id, boolean isRedAlliance, double txDeg) {
+        if (isLeftSetTag(id, isRedAlliance)) {
+            leftSetTxSum += txDeg;
+            leftSetCount++;
+        } else if (isRightSetTag(id, isRedAlliance)) {
+            rightSetTxSum += txDeg;
+            rightSetCount++;
+        }
+    }
+
+    /** True when the current frame shows at least one tag from the LEFT set AND one from the RIGHT set. */
+    public boolean hasBothTagSets() {
+        return leftSetCount > 0 && rightSetCount > 0;
+    }
+
+    /** Horizontal angle (deg) of the point halfway between the LEFT set and the RIGHT set. Only valid if hasBothTagSets(). */
+    public double getMidpointTx() {
+        if (!hasBothTagSets()) return 0.0;
+        double left = leftSetTxSum / leftSetCount;
+        double right = rightSetTxSum / rightSetCount;
+        return (left + right) / 2.0;
+    }
+
+    /** Which tag sets the current frame shows, for telemetry. */
+    public String getTagSetSummary() {
+        return "L" + leftSetCount + " R" + rightSetCount;
+    }
+
+    /**
+     * Turret target angle that points between the two tag sets. Same gain, deadband and limits as getTurretTargetAngle.
+     * Returns the current angle unchanged if both sets are not visible.
+     */
+    public double getTurretTargetAngleToMidpoint(double currentTurretAngleDeg) {
+        if (!hasBothTagSets()) return currentTurretAngleDeg;
+        double errorTx = getMidpointTx() - TURRET_AIM_OFFSET_DEG;
+        if (Math.abs(errorTx) <= AIM_DEADBAND_DEG) return currentTurretAngleDeg;
+        double desired = currentTurretAngleDeg - (errorTx * TURRET_AUTO_AIM_GAIN);
+        return Range.clip(desired, TURRET_MIN_ANGLE_DEG, TURRET_MAX_ANGLE_DEG);
     }
 
     /**
