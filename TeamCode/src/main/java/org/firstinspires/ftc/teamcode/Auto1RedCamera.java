@@ -22,7 +22,7 @@ import com.qualcomm.robotcore.util.Range;
  *   -> lift DOWN -> forward 8 -> wait 1 -> lift UP -> stop intake -> shift left 48 -> start intake -> look for a RED AprilTag during that move (up to 2 s from its start).
  * Found:     gate open, wait 1 -> shift right 34 -> gate closed -> back 30 -> turn cw 90 -> lift DOWN -> forward 12
  *   -> wait 2 -> back 12 -> lift UP -> shift right 50 -> forward 16.
- * Not found (turret motor moves to a fixed 30 deg left, no auto-aim): shift right 34 -> back 100 -> shift left 20 -> turn 180 -> lift DOWN -> forward 12 -> flywheel -30 RPM -> gate open, wait 1
+ * Not found (turret motor moves to a fixed 30 deg left, no auto-aim): shift right 34 -> back 100 -> shift left 20 -> turn 180 -> lift DOWN -> forward 12 -> flywheel -100 RPM -> gate open, wait 1
  *   -> forward 6 -> wait 1 -> back 20 -> lift UP -> turn cw 60 -> back 30.
  * The turret auto-aims at the MIDDLE of the red LEFT (31,32) and RIGHT (35,36) tag sets when both are visible (re-centers to 0 deg if the tags are lost). Turret must start centered.
  * Intake and flywheel run to the end. Flywheel RPM comes from the battery voltage (2860 if unreadable).
@@ -71,7 +71,7 @@ public class Auto1RedCamera extends LinearOpMode {
     public static double N_TURN_2_DEG = -60.0;        // clockwise 60
     public static double N_BACK_3_IN = 30.0;
     public static double NOT_FOUND_TURRET_ANGLE_DEG = 30.0; // not-found path: the turret MOTOR moves to this fixed angle from 0 (+ = left, - = right), instead of auto-aim. If it turns the wrong way, make it negative
-    public static double SECOND_SHOT_RPM_REDUCTION = 30.0; // flywheel RPM lowered by this much from the gate open in this path onward
+    public static double SECOND_SHOT_RPM_REDUCTION = 100.0; // flywheel RPM lowered by this much from the gate open in this path onward
 
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
