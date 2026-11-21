@@ -24,8 +24,8 @@ import com.qualcomm.robotcore.util.Range;
  * Opening steps: shooter on (gate already open, intake off) -> wait 3 s -> intake on, wait 3 s (shooting) -> gate closed.
  */
 @Config
-@Autonomous(name = "2BlueShootParkCamera", group = "Auto")
-public class Auto2BlueShootParkCamera extends LinearOpMode {
+@Autonomous(name = "2BlueShootPark", group = "Auto")
+public class Auto2BlueShootPark extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 15.0;  // look for a blue AprilTag for up to this long
     private double flywheelTargetRPM = StrikersConfig.MID_BATTERY_RPM; // set from the battery at init
