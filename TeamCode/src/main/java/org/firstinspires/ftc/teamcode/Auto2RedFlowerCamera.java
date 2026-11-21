@@ -25,8 +25,8 @@ import com.qualcomm.robotcore.util.Range;
  *   -> gate open, wait 3 s (second shot) -> gate closed -> back 8 -> left 50 -> stop everything.
  */
 @Config
-@Autonomous(name = "2RedShootFlowerShootParkCamera", group = "Auto")
-public class Auto2RedShootFlowerShootParkCamera extends LinearOpMode {
+@Autonomous(name = "2RedFlowerCamera", group = "Auto")
+public class Auto2RedFlowerCamera extends LinearOpMode {
 
     public static double TAG_TIMEOUT_SEC = 7.0;  // look for a red AprilTag for up to this long
     private double flywheelTargetRPM = StrikersConfig.MID_BATTERY_RPM; // set from the battery at init
