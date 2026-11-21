@@ -23,7 +23,7 @@ import com.qualcomm.robotcore.util.Range;
  * Found:     gate open, wait 1 -> shift right 34 -> gate closed -> back 30 -> turn cw 90 -> lift DOWN -> forward 12
  *   -> wait 2 -> back 12 -> lift UP -> shift right 50 -> forward 16.
  * Not found (turret motor moves to a fixed 20 deg left, no auto-aim): shift right 34 -> back 100 -> shift left 20 -> turn 180 -> lift DOWN -> forward 12 -> flywheel -100 RPM -> gate open, wait 1
- *   -> forward 6 -> wait 1 -> back 20 -> lift UP -> turn cw 60 -> back 30.
+ *   -> forward 6 -> wait 1 -> back 20 -> lift UP -> turret back to 0 -> turn cw 60 -> back 30.
  * The turret auto-aims at the MIDDLE of the blue LEFT (39,40) and RIGHT (43,44) tag sets when both are visible (re-centers to 0 deg if the tags are lost). Turret must start centered.
  * Intake and flywheel run to the end. Flywheel RPM comes from the battery voltage (2860 if unreadable).
  */
@@ -80,6 +80,7 @@ public class Auto1BlueCamera extends LinearOpMode {
     private boolean searchingTag = false;                // true while the tag search window is open
     private LimelightShooterSubsystem vision;
     private DcMotorEx turret;                            // null if the turret is not in the robot configuration
+    private double manualTurretAngle = 0.0;              // fixed turret angle used while manualTurret is true
     private boolean manualTurret = false;               // true = turret motor goes to a fixed angle (not-found path), auto-aim is ignored
     private double targetTurretAngle = 0.0;              // degrees, 0 = center home
     private final ElapsedTime tagLostTimer = new ElapsedTime(); // time since the aim target was last seen
@@ -213,6 +214,7 @@ public class Auto1BlueCamera extends LinearOpMode {
             turnDegrees(drive, N_TURN_DEG);
             liftDown(intakeLiftRight);
             moveAlongHeading(drive, N_FORWARD_1_IN);
+            manualTurretAngle = NOT_FOUND_TURRET_ANGLE_DEG;
             manualTurret = true; // turret MOTOR moves to the fixed angle from 0 (no hand turning); auto-aim is off for the rest of the auto
             // Second shot: flywheel runs SECOND_SHOT_RPM_REDUCTION slower, for the rest of the auto.
             flywheelTargetRPM -= SECOND_SHOT_RPM_REDUCTION;
@@ -223,6 +225,7 @@ public class Auto1BlueCamera extends LinearOpMode {
             holdFlywheel(rpm, N_WAIT_SEC, "Waiting");
             moveAlongHeading(drive, -N_BACK_2_IN);
             liftUp(intakeLiftRight);
+            manualTurretAngle = 0.0; // turret MOTOR goes back to the 0 deg home position
             turnDegrees(drive, N_TURN_2_DEG);
             moveAlongHeading(drive, -N_BACK_3_IN);
         }
@@ -319,7 +322,7 @@ public class Auto1BlueCamera extends LinearOpMode {
         if (turret == null) return;
         double tpd = (StrikersConfig.TURRET_TICKS_PER_REV * StrikersConfig.TURRET_GEAR_RATIO) / 360.0;
         if (manualTurret) {
-            targetTurretAngle = Range.clip(NOT_FOUND_TURRET_ANGLE_DEG, -StrikersConfig.TURRET_MAX_ANGLE_DEG, StrikersConfig.TURRET_MAX_ANGLE_DEG);
+            targetTurretAngle = Range.clip(manualTurretAngle, -StrikersConfig.TURRET_MAX_ANGLE_DEG, StrikersConfig.TURRET_MAX_ANGLE_DEG);
             turret.setTargetPosition((int) Math.round(targetTurretAngle * tpd));
             turret.setPower(StrikersConfig.TURRET_MAX_POWER);
             return;
