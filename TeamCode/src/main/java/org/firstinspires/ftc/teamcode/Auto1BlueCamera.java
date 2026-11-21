@@ -18,11 +18,11 @@ import com.qualcomm.robotcore.util.Range;
 /**
  * BLUE alliance, Start 1: shoot, move, look for a BLUE AprilTag, then run the Tag Found or Tag Not Found path.
  *
- * Opening: flywheel on (gate open) -> wait 2.5 -> intake on, wait 1 -> gate closed -> back 10 -> shift right 50
+ * Opening: flywheel on (gate open) -> wait 2 -> intake on, wait 1 -> gate closed -> back 10 -> shift right 50
  *   -> lift DOWN -> forward 8 -> wait 1 -> lift UP -> stop intake -> forward 4 -> shift left 48 -> start intake -> look for a BLUE AprilTag during that move (up to 2 s from its start).
  * Found:     gate open, wait 1 -> shift right 34 -> gate closed -> back 34 -> turn cw 90 -> lift DOWN -> forward 12
  *   -> wait 2 -> back 12 -> lift UP -> shift right 50 -> forward 16.
- * Not found (turret motor moves to a fixed 20 deg left, no auto-aim): shift right 34 -> back 104 -> shift left 20 -> turn 180 -> lift DOWN -> forward 12 -> flywheel -100 RPM -> gate open, wait 1
+ * Not found (turret motor moves to a fixed 20 deg left, no auto-aim): shift right 34 -> back 104 -> shift left 20 -> turn 180 -> lift DOWN -> forward 12 -> flywheel -100 RPM -> gate open, wait 0.5
  *   -> forward 6 -> wait 1 -> back 20 -> lift UP -> turret back to 0 -> turn cw 60 -> back 30.
  * The turret auto-aims at the MIDDLE of the blue LEFT (39,40) and RIGHT (43,44) tag sets when both are visible (re-centers to 0 deg if the tags are lost). Turret must start centered.
  * Intake and flywheel run to the end. Flywheel RPM comes from the battery voltage (2860 if unreadable).
@@ -39,7 +39,7 @@ public class Auto1BlueCamera extends LinearOpMode {
     public static boolean AUTO_AIM_ENABLED = true;    // turret auto-aims at the BLUE AprilTag whenever it is visible (set false to disable)
 
     // Opening (both outcomes)
-    public static double SPINUP_WAIT_SEC = 2.5;
+    public static double SPINUP_WAIT_SEC = 2.0;
     public static double SHOOT_WAIT_SEC = 1.0;
     public static double OPEN_BACK_IN = 10.0;
     public static double OPEN_SHIFT_RIGHT_IN = 50.0;
@@ -65,7 +65,7 @@ public class Auto1BlueCamera extends LinearOpMode {
     public static double N_SHIFT_LEFT_1_IN = 14.0;
     public static double N_TURN_DEG = 180.0;          // rotate 180 (anticlockwise)
     public static double N_FORWARD_1_IN = 12.0;
-    public static double N_GATE_WAIT_SEC = 1.0;
+    public static double N_GATE_WAIT_SEC = 0.5;
     public static double N_FORWARD_2_IN = 6.0;
     public static double N_WAIT_SEC = 1.0;
     public static double N_BACK_2_IN = 20.0;

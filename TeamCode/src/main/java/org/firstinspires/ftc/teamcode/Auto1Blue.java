@@ -20,8 +20,8 @@ import com.qualcomm.robotcore.util.Range;
  *
  * Opening: flywheel on (gate open) -> wait 2.5 -> intake on, wait 1 -> gate closed -> back 10 -> shift right 50
  *   -> lift DOWN -> forward 8 -> wait 1 -> lift UP -> stop intake -> shift left 48 -> start intake.
- * Then: gate open, wait 1 -> shift right 34 -> gate closed -> back 30 -> turn cw 90 -> lift DOWN -> forward 12
- *   -> wait 2 -> back 12 -> lift UP -> shift right 50 -> forward 16.
+ * Then: gate open, wait 1 -> shift right 34 -> gate closed -> back 32 -> turn cw 90 -> lift DOWN -> forward 12
+ *   -> wait 2 -> back 12 -> lift UP -> shift right 48 -> forward 18.
  * Intake and flywheel run to the end. Flywheel RPM comes from the battery voltage (2860 if unreadable).
  */
 @Config
@@ -43,13 +43,13 @@ public class Auto1Blue extends LinearOpMode {
     // Path (turn sign: + = anticlockwise, - = clockwise)
     public static double F_GATE_WAIT_SEC = 1.0;
     public static double F_SHIFT_RIGHT_1_IN = 34.0;
-    public static double F_BACK_1_IN = 30.0;
+    public static double F_BACK_1_IN = 32.0;
     public static double F_TURN_1_DEG = -90.0;        // clockwise 90
     public static double F_FORWARD_1_IN = 12.0;
     public static double F_WAIT_1_SEC = 2.0;
     public static double F_BACK_2_IN = 12.0;
-    public static double F_SHIFT_RIGHT_2_IN = 50.0;
-    public static double F_FORWARD_2_IN = 16.0;
+    public static double F_SHIFT_RIGHT_2_IN = 48.0;
+    public static double F_FORWARD_2_IN = 18.0;
 
 
     private DcMotorEx shooter1;
