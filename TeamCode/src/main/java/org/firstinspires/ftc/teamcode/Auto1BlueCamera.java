@@ -59,9 +59,9 @@ public class Auto1BlueCamera extends LinearOpMode {
     public static double F_FORWARD_2_IN = 16.0;
 
     // Tag NOT found
-    public static double N_SHIFT_RIGHT_IN = 34.0;
+    public static double N_SHIFT_RIGHT_IN = 28.0;
     public static double N_BACK_IN = 100.0;
-    public static double N_SHIFT_LEFT_1_IN = 20.0;
+    public static double N_SHIFT_LEFT_1_IN = 14.0;
     public static double N_TURN_DEG = 180.0;          // rotate 180 (anticlockwise)
     public static double N_FORWARD_1_IN = 12.0;
     public static double N_GATE_WAIT_SEC = 1.0;
