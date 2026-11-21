@@ -38,7 +38,6 @@ public class BioBuzzCentricBlueStrikers extends LinearOpMode {
 
     // Hardcoded BLUE Alliance
     private final boolean isRedAlliance = false;
-    private boolean autoAimActive = false; // OFF by default
 
     // Vision Subsystem
     private LimelightShooterSubsystem visionSubsystem;
@@ -144,22 +143,12 @@ public class BioBuzzCentricBlueStrikers extends LinearOpMode {
         boolean lastIntakeBState = false;
         boolean lastShifterAState = false;
         boolean lastShooterYState = false;
-        boolean lastAutoAimRBState = false;
         double lastIntakePower = Double.NaN;
 
         while (opModeIsActive()) {
 
-            // --- Auto-Aim Controls (Gamepad 2: Right Bumper / G2.RB = Toggle ON/OFF, Left Bumper / G2.LB = Hold-to-Aim) ---
-            if (gamepad2.right_bumper && !lastAutoAimRBState) {
-                autoAimActive = !autoAimActive;
-                if (!autoAimActive) {
-                    visionSubsystem.resetLock();
-                }
-            }
-            lastAutoAimRBState = gamepad2.right_bumper;
-
-            // Active if toggled ON via G2.RB OR held down via G2.LB
-            boolean isAutoAimEngaged = autoAimActive || gamepad2.left_bumper;
+            // --- Auto-Aim Control (Gamepad 2: Left Bumper / G2.LB = Hold-to-Aim; release = OFF) ---
+            boolean isAutoAimEngaged = gamepad2.left_bumper;
 
             // Update Limelight Vision Subsystem: Camera stream & AprilTag processing ONLY run while auto-aim is engaged (saves CPU & battery)
             visionSubsystem.setCameraActive(isAutoAimEngaged);
@@ -280,7 +269,7 @@ public class BioBuzzCentricBlueStrikers extends LinearOpMode {
             // Dynamic distance-based flywheel RPM calculation
             double manualBaseRPM = isShifterOpen ? StrikersConfig.FLYWHEEL_OPEN_RPM : StrikersConfig.FLYWHEEL_CLOSED_RPM;
             double currentTargetRPM;
-            if (autoAimActive && visionSubsystem.isTargetVisible()) {
+            if (isAutoAimEngaged && visionSubsystem.isTargetVisible()) {
                 currentTargetRPM = visionSubsystem.getFlywheelTargetRPM(isShifterOpen, manualBaseRPM);
             } else {
                 currentTargetRPM = manualBaseRPM;
@@ -325,8 +314,7 @@ public class BioBuzzCentricBlueStrikers extends LinearOpMode {
                 telemetry.addData("Limelight Target", "[SEARCHING] Looking for BLUE tags (39, 40, 43, 44)...");
             }
 
-            telemetry.addData("Turret Auto-Aim", "G2.RB Toggle: %s | G2.LB Hold: %s (Status: %s)",
-                    autoAimActive ? "ON" : "OFF",
+            telemetry.addData("Turret Auto-Aim", "G2.LB Hold: %s (Status: %s)",
                     gamepad2.left_bumper ? "HELD" : "RELEASED",
                     isAutoAimEngaged ? "ACTIVE" : "OFF (Center Home)");
             telemetry.addData("Turret Angle", "Target: %.1f° | Current: %.1f° (%d ticks)",
