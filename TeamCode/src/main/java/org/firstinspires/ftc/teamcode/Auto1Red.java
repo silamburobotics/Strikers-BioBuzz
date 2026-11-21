@@ -16,14 +16,12 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 /**
- * RED alliance, Start 1: shoot, move, then ALWAYS run the same path. Use this when the camera is not working or is disconnected.
- * The camera is still used if it is present (tag search and turret aim), but the path does NOT depend on it.
+ * RED alliance, Start 1: shoot, move, then run the path. NO camera and NO AprilTag check (use when the camera is not working).
  *
  * Opening: flywheel on (gate open) -> wait 2.5 -> intake on, wait 1 -> gate closed -> back 10 -> shift right 50
- *   -> lift DOWN -> forward 8 -> wait 1 -> lift UP -> stop intake -> shift left 48 -> start intake -> look for a RED AprilTag (up to 2 s from the start of that move).
- * Then (found or not): gate open, wait 1 -> shift right 34 -> gate closed -> back 30 -> turn cw 90 -> lift DOWN -> forward 12
+ *   -> lift DOWN -> forward 8 -> wait 1 -> lift UP -> stop intake -> shift left 48 -> start intake.
+ * Then: gate open, wait 1 -> shift right 34 -> gate closed -> back 30 -> turn cw 90 -> lift DOWN -> forward 12
  *   -> wait 2 -> back 12 -> lift UP -> shift right 50 -> forward 16.
- * The turret auto-aims at the MIDDLE of the red LEFT (31,32) and RIGHT (35,36) tag sets when both are visible (re-centers to 0 deg if the tags are lost). Turret must start centered.
  * Intake and flywheel run to the end. Flywheel RPM comes from the battery voltage (2860 if unreadable).
  */
 @Config
@@ -32,12 +30,8 @@ public class Auto1Red extends LinearOpMode {
 
     private double flywheelTargetRPM = StrikersConfig.MID_BATTERY_RPM; // set from the battery at init
 
-    public static double TAG_TIMEOUT_SEC = 2.0;       // look for a red AprilTag for up to this long
-    public static boolean AIM_AT_MIDPOINT = true;     // aim between the LEFT and RIGHT red tag sets (false = aim at the single closest tag)
-    public static double TAG_LOST_RECENTER_SEC = 0.3;  // tag lost this long -> turret re-centers to 0 deg (like teleop)
-    public static boolean AUTO_AIM_ENABLED = true;    // turret auto-aims at the RED AprilTag whenever it is visible (set false to disable)
 
-    // Opening (both outcomes)
+    // Opening
     public static double SPINUP_WAIT_SEC = 2.5;
     public static double SHOOT_WAIT_SEC = 1.0;
     public static double OPEN_BACK_IN = 10.0;
@@ -61,12 +55,6 @@ public class Auto1Red extends LinearOpMode {
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
     private double smoothedTargetRPM = 0.0;
-    private boolean tagFound = false;                    // latched true as soon as a red tag is seen (only during the search window)
-    private boolean searchingTag = false;                // true while the tag search window is open
-    private LimelightShooterSubsystem vision;
-    private DcMotorEx turret;                            // null if the turret is not in the robot configuration
-    private double targetTurretAngle = 0.0;              // degrees, 0 = center home
-    private final ElapsedTime tagLostTimer = new ElapsedTime(); // time since the aim target was last seen
 
     @Override
     public void runOpMode() {
@@ -109,35 +97,16 @@ public class Auto1Red extends LinearOpMode {
         shooter2.setDirection(StrikersConfig.MOTOR_2_REVERSED
                 ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
 
-        // Turret, same setup as teleop. The turret must be at its CENTER home position when the auto starts.
-        try {
-            turret = hardwareMap.get(DcMotorEx.class, StrikersConfig.TURRET_NAME);
-            turret.setDirection(StrikersConfig.TURRET_REVERSED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
-            turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            turret.setTargetPosition(0);
-            turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            turret.setPower(StrikersConfig.TURRET_MAX_POWER);
-        } catch (Exception e) {
-            turret = null;
-        }
-
-        // Vision (Limelight 3A or Logitech C270, whichever is connected). Stays on for the whole auto so the turret can aim.
-        vision = new LimelightShooterSubsystem(hardwareMap);
-
         telemetry.addData("Status", "Ready - RED Start 1 shoot garden shoot flower shoot park");
         telemetry.addData("Flywheel RPM (battery)", "%.0f", flywheelTargetRPM);
         telemetry.update();
 
         waitForStart();
-        if (isStopRequested()) {
-            vision.stop();
-            return;
-        }
+        if (isStopRequested()) return;
 
         double rpm = flywheelTargetRPM;
 
-        // ---------- Opening (both outcomes) ----------
+        // ---------- Opening ----------
         updateFlywheel(rpm);                                                  // 1. flywheel on, gate already open
         holdFlywheel(rpm, SPINUP_WAIT_SEC, "Spinning up");                    // 2. wait for spin-up
         intake.setPower(StrikersConfig.INTAKE_POWER);                         // 3. intake on
@@ -150,31 +119,10 @@ public class Auto1Red extends LinearOpMode {
         holdFlywheel(rpm, OPEN_WAIT_SEC, "Waiting");                          // 9. wait
         liftUp(intakeLiftRight);                                              // 10. right lift UP
         intake.setPower(0.0);                                                 //     stop intake
-        // 11. shift left, looking for the RED AprilTag WHILE driving (the search window starts now).
-        ElapsedTime tagTimer = new ElapsedTime();
-        searchingTag = true;
-        shiftSideways(drive, OPEN_SHIFT_LEFT_IN);
-        if (opModeIsActive()) intake.setPower(StrikersConfig.INTAKE_POWER); // start intake
+        shiftSideways(drive, OPEN_SHIFT_LEFT_IN);                             // 11. shift left
+        if (opModeIsActive()) intake.setPower(StrikersConfig.INTAKE_POWER);  // 12. start intake
 
-        // ---------- Keep looking for a RED AprilTag if it was not seen during the move ----------
-        // The total search window is TAG_TIMEOUT_SEC from the start of the shift left, so no extra wait if the move took longer.
-        while (opModeIsActive() && !tagFound && tagTimer.seconds() < TAG_TIMEOUT_SEC) {
-            updateFlywheel(rpm); // also updates the camera and turret aim (RED tags only)
-            telemetry.addData("AprilTag", tagFound ? "DETECTED" : "NOT DETECTED - looking");
-            telemetry.addData("Time", "%.1f / %.1f s", tagTimer.seconds(), TAG_TIMEOUT_SEC);
-            telemetry.addData("Tags seen", vision.getTagsSeenSummary());
-            telemetry.addData("Tag sets seen", vision.getTagSetSummary());
-            telemetry.update();
-            if (tagFound) break;
-            sleep(20);
-        }
-        searchingTag = false;
-        if (!opModeIsActive()) {
-            vision.stop();
-            return;
-        }
-
-        // ---------- Same path whether or not a tag was found ----------
+        // ---------- Path ----------
         gate.setPosition(StrikersConfig.OPEN_POSITION);
         holdFlywheel(rpm, F_GATE_WAIT_SEC, "Gate open");
         shiftSideways(drive, -F_SHIFT_RIGHT_1_IN);
@@ -197,7 +145,6 @@ public class Auto1Red extends LinearOpMode {
             telemetry.update();
             sleep(20);
         }
-        vision.stop(); // done with the camera
     }
 
     private void liftDown(Servo lift) {
@@ -243,7 +190,7 @@ public class Auto1Red extends LinearOpMode {
                         .build());
     }
 
-    /** Like Actions.runBlocking, but keeps the flywheel control loop (and camera / turret aim) running while the action runs. */
+    /** Like Actions.runBlocking, but keeps the flywheel control loop running while the action runs. */
     private void runWithFlywheel(Action action) {
         boolean running = true;
         while (opModeIsActive() && running) {
@@ -267,44 +214,8 @@ public class Auto1Red extends LinearOpMode {
         }
     }
 
-    /**
-     * Updates the camera (RED tags only) and points the turret between the LEFT and RIGHT tag sets (AIM_AT_MIDPOINT),
-     * or at the single closest tag. If it cannot aim (tags lost for TAG_LOST_RECENTER_SEC) the turret RE-CENTERS to 0 deg, like teleop.
-     * During the search window it also latches tagFound.
-     */
-    private void updateAim() {
-        if (vision == null) return;
-        vision.update(true); // RED alliance AprilTags only (blue tags are ignored)
-        boolean visible = vision.isTargetVisible();
-        if (searchingTag && !tagFound && visible) tagFound = true;
-
-        if (!AUTO_AIM_ENABLED || turret == null) return;
-        double ticksPerDegree = (StrikersConfig.TURRET_TICKS_PER_REV * StrikersConfig.TURRET_GEAR_RATIO) / 360.0;
-        double currentAngle = turret.getCurrentPosition() / ticksPerDegree;
-        boolean canAim;
-        if (AIM_AT_MIDPOINT) {
-            // Aim at the middle of the LEFT and RIGHT tag sets (needs both sets visible).
-            canAim = vision.hasBothTagSets();
-            if (canAim) targetTurretAngle = vision.getTurretTargetAngleToMidpoint(currentAngle);
-        } else {
-            canAim = visible;
-            if (canAim && Math.abs(vision.getTxError()) > LimelightShooterSubsystem.AIM_DEADBAND_DEG) {
-                targetTurretAngle = vision.getTurretTargetAngle(currentAngle);
-            }
-        }
-        if (canAim) {
-            tagLostTimer.reset();
-        } else if (tagLostTimer.seconds() > TAG_LOST_RECENTER_SEC) {
-            targetTurretAngle = 0.0; // tag lost: re-center to 0 deg, same as teleop
-        }
-        targetTurretAngle = Range.clip(targetTurretAngle, -StrikersConfig.TURRET_MAX_ANGLE_DEG, StrikersConfig.TURRET_MAX_ANGLE_DEG);
-        turret.setTargetPosition((int) Math.round(targetTurretAngle * ticksPerDegree));
-        turret.setPower(StrikersConfig.TURRET_MAX_POWER);
-    }
-
     /** One control step, same slew limit and proportional correction as StrikersConfig. */
     private double updateFlywheel(double targetRPM) {
-        updateAim(); // camera + turret aim runs in every loop (moves, waits and the final loop)
         double maxRPMChangePerLoop = 60.0;
         smoothedTargetRPM += Range.clip(targetRPM - smoothedTargetRPM,
                 -maxRPMChangePerLoop, maxRPMChangePerLoop);
