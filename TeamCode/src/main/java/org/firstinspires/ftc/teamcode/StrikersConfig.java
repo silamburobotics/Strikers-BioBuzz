@@ -24,6 +24,7 @@ public class StrikersConfig {
     // --- Intake Motor & Dual Synchronized Lift Servos ---
     public static String INTAKE_NAME = "intake";
     public static double INTAKE_POWER = 1.0;
+    public static double GATE_OPEN_INTAKE_POWER = 0.3;    // teleop: intake power (either direction) while the gate is held open (G2.B)
     public static String INTAKE_LIFT_LEFT_NAME = "intakeLiftLeft";
     public static String INTAKE_LIFT_RIGHT_NAME = "intakeLiftRight";
     public static double INTAKE_LIFT_UP_POS = 0.78;       // Shared UP height position (Right servo automatically mirrored)

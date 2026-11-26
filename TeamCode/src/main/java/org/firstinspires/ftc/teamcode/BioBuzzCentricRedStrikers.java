@@ -193,6 +193,10 @@ public class BioBuzzCentricRedStrikers extends LinearOpMode {
             } else if (intakeMode == IntakeMode.REVERSE) {
                 intakePower = -StrikersConfig.INTAKE_POWER;
             }
+            if (gamepad2.b) {
+                // gate is open (G2.B held): slow the intake down to 0.3
+                intakePower = Math.signum(intakePower) * Math.min(Math.abs(intakePower), StrikersConfig.GATE_OPEN_INTAKE_POWER);
+            }
 
             if (intakePower != lastIntakePower) {
                 intake.setPower(intakePower);
