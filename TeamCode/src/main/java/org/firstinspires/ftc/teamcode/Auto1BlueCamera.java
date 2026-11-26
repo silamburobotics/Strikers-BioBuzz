@@ -20,8 +20,8 @@ import com.qualcomm.robotcore.util.Range;
  *
  * Opening: flywheel on (gate open) -> wait 2 -> intake on, wait 1 -> gate closed -> back 10 -> shift right 50
  *   -> lift DOWN -> forward 8 -> wait 1 -> lift UP -> stop intake -> forward 4 -> shift left 48 -> start intake -> look for a BLUE AprilTag during that move (up to 2 s from its start).
- * Found:     gate open, wait 1 -> shift right 34 -> gate closed -> back 34 -> turn cw 90 -> lift DOWN -> forward 12
- *   -> wait 2 -> back 12 -> lift UP -> shift right 50 -> forward 16.
+ * Found:     gate open, wait 1 -> shift right 34 -> gate closed -> back 37 -> turn cw 90 -> lift DOWN -> forward 12
+ *   -> wait 2 -> back 12 -> lift UP -> shift right 47 -> forward 16.
  * Not found (turret motor moves to a fixed 20 deg left, no auto-aim): shift right 34 -> back 104 -> shift left 20 -> turn 180 -> lift DOWN -> forward 12 -> flywheel -100 RPM -> gate open, wait 0.5
  *   -> forward 6 -> wait 1 -> back 20 -> lift UP -> turret back to 0 -> turn cw 60 -> back 30.
  * The turret auto-aims at the MIDDLE of the blue LEFT (39,40) and RIGHT (43,44) tag sets when both are visible (re-centers to 0 deg if the tags are lost). Turret must start centered.
@@ -51,12 +51,12 @@ public class Auto1BlueCamera extends LinearOpMode {
     // Tag FOUND (turn sign: + = anticlockwise, - = clockwise)
     public static double F_GATE_WAIT_SEC = 1.0;
     public static double F_SHIFT_RIGHT_1_IN = 34.0;
-    public static double F_BACK_1_IN = 34.0;
+    public static double F_BACK_1_IN = 37.0;
     public static double F_TURN_1_DEG = -90.0;        // clockwise 90
     public static double F_FORWARD_1_IN = 12.0;
     public static double F_WAIT_1_SEC = 2.0;
     public static double F_BACK_2_IN = 12.0;
-    public static double F_SHIFT_RIGHT_2_IN = 50.0;
+    public static double F_SHIFT_RIGHT_2_IN = 47.0;
     public static double F_FORWARD_2_IN = 16.0;
 
     // Tag NOT found
@@ -81,6 +81,10 @@ public class Auto1BlueCamera extends LinearOpMode {
     private boolean searchingTag = false;                // true while the tag search window is open
     private LimelightShooterSubsystem vision;
     private DcMotorEx turret;                            // null if the turret is not in the robot configuration
+    private DcMotorEx intakeMotor;                      // intake motor, driven from updateFlywheel() so it can be slowed while the gate is open
+    private boolean intakeOn = false;                    // intake requested ON (full power, or GATE_OPEN_INTAKE_POWER while the gate is open)
+    private boolean gateIsOpen = true;                   // gate starts OPEN
+    private double lastIntakePower = Double.NaN;
     private double manualTurretAngle = 0.0;              // fixed turret angle used while manualTurret is true
     private boolean manualTurret = false;               // true = turret motor goes to a fixed angle (not-found path), auto-aim is ignored
     private double targetTurretAngle = 0.0;              // degrees, 0 = center home
@@ -97,6 +101,7 @@ public class Auto1BlueCamera extends LinearOpMode {
         // Intake
         DcMotorEx intake = hardwareMap.get(DcMotorEx.class, StrikersConfig.INTAKE_NAME);
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intakeMotor = intake;
 
         // Gate starts OPEN. Shifter starts closed, same as teleop.
         Servo gate = hardwareMap.get(Servo.class, StrikersConfig.GATE_SERVO);
@@ -158,22 +163,23 @@ public class Auto1BlueCamera extends LinearOpMode {
         // ---------- Opening (both outcomes) ----------
         updateFlywheel(rpm);                                                  // 1. flywheel on, gate already open
         holdFlywheel(rpm, SPINUP_WAIT_SEC, "Spinning up");                    // 2. wait for spin-up
-        intake.setPower(StrikersConfig.INTAKE_POWER);                         // 3. intake on
+        setIntake(true);                                                      // 3. intake on (0.3 power while the gate is open)
         holdFlywheel(rpm, SHOOT_WAIT_SEC, "Shooting (gate already open)");    //    wait while shooting
         gate.setPosition(StrikersConfig.CLOSED_POSITION);                     // 4. gate closed
+        gateIsOpen = false;
         moveAlongHeading(drive, -OPEN_BACK_IN);                               // 5. back
         shiftSideways(drive, -OPEN_SHIFT_RIGHT_IN);                           // 6. shift right
         liftDown(intakeLiftRight);                                            // 7. right lift DOWN
         moveAlongHeading(drive, OPEN_FORWARD_IN);                             // 8. forward
         holdFlywheel(rpm, OPEN_WAIT_SEC, "Waiting");                          // 9. wait
         liftUp(intakeLiftRight);                                              // 10. right lift UP
-        intake.setPower(0.0);                                                 //     stop intake
+        setIntake(false);                                                     //     stop intake
         moveAlongHeading(drive, OPEN_FORWARD_2_IN);                           //     forward 4
         // 11. shift left, looking for the BLUE AprilTag WHILE driving (the search window starts now).
         ElapsedTime tagTimer = new ElapsedTime();
         searchingTag = true;
         shiftSideways(drive, OPEN_SHIFT_LEFT_IN);
-        if (opModeIsActive()) intake.setPower(StrikersConfig.INTAKE_POWER); // start intake
+        if (opModeIsActive()) setIntake(true); // start intake
 
         // ---------- Keep looking for a BLUE AprilTag if it was not seen during the move ----------
         // The total search window is TAG_TIMEOUT_SEC from the start of the shift left, so no extra wait if the move took longer.
@@ -196,9 +202,11 @@ public class Auto1BlueCamera extends LinearOpMode {
         if (tagFound) {
             // ---------- Tag FOUND ----------
             gate.setPosition(StrikersConfig.OPEN_POSITION);
+            gateIsOpen = true;
             holdFlywheel(rpm, F_GATE_WAIT_SEC, "Tag found: gate open");
             shiftSideways(drive, -F_SHIFT_RIGHT_1_IN);
             gate.setPosition(StrikersConfig.CLOSED_POSITION);
+            gateIsOpen = false;
             moveAlongHeading(drive, -F_BACK_1_IN);
             turnDegrees(drive, F_TURN_1_DEG);
             liftDown(intakeLiftRight);
@@ -221,7 +229,7 @@ public class Auto1BlueCamera extends LinearOpMode {
             // Second shot: flywheel runs SECOND_SHOT_RPM_REDUCTION slower, for the rest of the auto.
             flywheelTargetRPM -= SECOND_SHOT_RPM_REDUCTION;
             rpm = flywheelTargetRPM;
-            if (opModeIsActive()) gate.setPosition(StrikersConfig.OPEN_POSITION);
+            if (opModeIsActive()) { gate.setPosition(StrikersConfig.OPEN_POSITION); gateIsOpen = true; }
             holdFlywheel(rpm, N_GATE_WAIT_SEC, "Gate open (second shot)");
             moveAlongHeading(drive, N_FORWARD_2_IN);
             holdFlywheel(rpm, N_WAIT_SEC, "Waiting");
@@ -354,7 +362,24 @@ public class Auto1BlueCamera extends LinearOpMode {
     }
 
     /** One control step, same slew limit and proportional correction as StrikersConfig. */
+    private void setIntake(boolean on) {
+        intakeOn = on;
+        applyIntake();
+    }
+
+    /** Intake runs full power, but only GATE_OPEN_INTAKE_POWER while the gate is open. */
+    private void applyIntake() {
+        if (intakeMotor == null) return;
+        double p = !intakeOn ? 0.0
+                : (gateIsOpen ? Math.min(StrikersConfig.INTAKE_POWER, StrikersConfig.GATE_OPEN_INTAKE_POWER) : StrikersConfig.INTAKE_POWER);
+        if (p != lastIntakePower) {
+            intakeMotor.setPower(p);
+            lastIntakePower = p;
+        }
+    }
+
     private double updateFlywheel(double targetRPM) {
+        applyIntake();
         updateAim(); // camera + turret aim runs in every loop (moves, waits and the final loop)
         double maxRPMChangePerLoop = 60.0;
         smoothedTargetRPM += Range.clip(targetRPM - smoothedTargetRPM,
